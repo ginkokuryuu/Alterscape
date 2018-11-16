@@ -4,7 +4,7 @@
 
 void Bullet::draw(wxAutoBufferedPaintDC &dc)
 {
-	dc.SetBrush(wxBrush(wxColor(*wxRED)));
+	dc.SetBrush(wxBrush(wxColor(*wxWHITE)));
 	//dc.SetPen(wxPen(wxColor(*wxRED), 1, wxPENSTYLE_SOLID)); //ball outline
 	dc.DrawCircle(wxPoint(x, y), 10);
 }

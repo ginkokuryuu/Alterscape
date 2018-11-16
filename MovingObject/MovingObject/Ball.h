@@ -15,7 +15,7 @@ private:
 public:
 	Ball();
 	Ball(int x, int y, int r);
-	void draw(wxAutoBufferedPaintDC &dc);
+	void draw(wxAutoBufferedPaintDC &dc, bool isPlayer);
 	void move();
 	void moveX();
 	void moveY();

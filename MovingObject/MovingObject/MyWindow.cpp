@@ -1,12 +1,15 @@
 #include "MyWindow.h"
 #include "Ball.h"
 #include "Bullet.h"
+#include <stdlib.h>
+#include <time.h>
 #define TIMER_ID 2000
 
 BEGIN_EVENT_TABLE(MyWindow, wxWindow)
 	EVT_PAINT(MyWindow::onPaint)
 	EVT_TIMER(TIMER_ID, MyWindow::onTimer)
-	EVT_TIMER(TIMER_ID+1, MyWindow::delayShoot)
+	EVT_TIMER(TIMER_ID + 1, MyWindow::delayShoot)
+	EVT_TIMER(TIMER_ID + 2, MyWindow::enemySpawn)
 	EVT_KEY_DOWN(MyWindow::moveBall)
 	EVT_KEY_UP(MyWindow::stopBall)
 	EVT_LEFT_DOWN(MyWindow::shootBall)
@@ -19,16 +22,22 @@ MyWindow::MyWindow(wxFrame * frame)
 	SetBackgroundStyle(wxBG_STYLE_PAINT);
 	SetBackgroundColour(*wxBLACK);
 	timer = new wxTimer(this, TIMER_ID);
-	timer->Start(1); //1ms refresh delay
+	timer->Start(1); // 1ms refresh delay
+	srand(time(NULL)); // generate random seed
+	spawner = new wxTimer(this, TIMER_ID + 2);
+	spawner->Start(rand() % 4000 + 1000); // generate random spawner delay (ms)
 	ball = new Ball(500, 500, 25);
 }
 
 MyWindow::~MyWindow()
 {
 	timer->Stop();
+	spawner->Stop();
 	delete timer;
+	delete spawner;
 	delete ball;
 	for (int i = 0; i < bullets.size(); i++) delete bullets[i];
+	for (int i = 0; i < enemy.size(); i++) delete enemy[i];
 }
 
 void MyWindow::onPaint(wxPaintEvent & evt)
@@ -42,9 +51,13 @@ void MyWindow::onPaint(wxPaintEvent & evt)
 			bullets[i]->draw(pdc);
 		}
 	}
-	ball->draw(pdc);
+	ball->draw(pdc,1);
 	
-
+	if (!enemy.empty()) {
+		for (int i = 0; i < enemy.size(); i++) {
+			enemy[i]->draw(pdc,0);
+		}
+	}
 }
 
 void MyWindow::onTimer(wxTimerEvent & evt)
@@ -114,7 +127,7 @@ void MyWindow::shootBall(wxMouseEvent & evt)
 		bullets.push_back(new Bullet(ball->getX(), ball->getY()));
 		bullets.back()->shoot(mousePos.x, mousePos.y);
 		shooter = new wxTimer(this, TIMER_ID + 1);
-		shooter->StartOnce(200); //shoot delay (ms)
+		shooter->StartOnce(200); // shoot delay (ms)
 	}
 }
 
@@ -122,4 +135,13 @@ void MyWindow::delayShoot(wxTimerEvent & evt)
 {
 	delete shooter;
 	shooter = nullptr;
+}
+
+void MyWindow::enemySpawn(wxTimerEvent &evt)
+{
+	int randX = rand() % 950 + 50;
+	int randY = rand() % 650 + 50;
+	int randTime = rand() % 4000 + 1000;
+	enemy.push_back(new Ball(randX, randY, 25)); // spawn enemy on random position
+	spawner->Start(randTime); // re-generate random spawner delay(ms)
 }

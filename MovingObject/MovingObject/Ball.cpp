@@ -14,9 +14,10 @@ Ball::Ball(int x, int y, int r)
 	this->r = r;
 }
 
-void Ball::draw(wxAutoBufferedPaintDC & dc)
+void Ball::draw(wxAutoBufferedPaintDC & dc, bool isPlayer)
 {
-	dc.SetBrush(wxBrush(wxColor(*wxWHITE)));
+	if (isPlayer) dc.SetBrush(wxBrush(wxColor(*wxWHITE)));
+	else dc.SetBrush(wxBrush(wxColor(*wxRED)));
 	//dc.SetPen(wxPen(wxColor(*wxRED), 1, wxPENSTYLE_SOLID)); //ball outline
 	dc.DrawCircle(wxPoint(x, y), r);
 }

@@ -15,11 +15,14 @@ public:
 	void stopBall(wxKeyEvent &evt);
 	void shootBall(wxMouseEvent &evt);
 	void delayShoot(wxTimerEvent &evt);
+	void enemySpawn(wxTimerEvent &evt);
 private:
 	std::vector<Bullet*> bullets;
 	Ball *ball;
+	std::vector<Ball*> enemy;
 	wxTimer *timer;
 	wxTimer *shooter;
+	wxTimer *spawner;
 	DECLARE_EVENT_TABLE()
 };
 
