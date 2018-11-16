@@ -1,6 +1,4 @@
 #include "MyWindow.h"
-#include "Ball.h"
-#include "Bullet.h"
 #include <stdlib.h>
 #include <time.h>
 #define TIMER_ID 2000
@@ -27,6 +25,8 @@ MyWindow::MyWindow(wxFrame * frame)
 	spawner = new wxTimer(this, TIMER_ID + 2);
 	spawner->Start(rand() % 4000 + 1000); // generate random spawner delay (ms)
 	ball = new Ball(500, 500, 25);
+	ball->setOwner(1);
+	obj.push_back(ball);
 }
 
 MyWindow::~MyWindow()
@@ -35,9 +35,9 @@ MyWindow::~MyWindow()
 	spawner->Stop();
 	delete timer;
 	delete spawner;
-	delete ball;
-	for (int i = 0; i < bullets.size(); i++) delete bullets[i];
-	for (int i = 0; i < enemy.size(); i++) delete enemy[i];
+	//for (int i = 0; i < bullets.size(); i++) delete bullets[i];
+	//for (int i = 0; i < enemy.size(); i++) delete enemy[i];
+	for (int i = 0; i < obj.size(); i++) delete obj[i];
 }
 
 void MyWindow::onPaint(wxPaintEvent & evt)
@@ -46,17 +46,20 @@ void MyWindow::onPaint(wxPaintEvent & evt)
 	
 	pdc.SetBrush(wxBrush(wxColor(*wxBLACK)));
 	pdc.DrawRectangle(wxPoint(0, 0), wxSize(1024, 768));
-	if (!bullets.empty()) {
+	/*if (!bullets.empty()) {
 		for (int i = 0; i < bullets.size(); i++) {
-			bullets[i]->draw(pdc);
+			bullets[i]->draw(pdc, 1);
 		}
 	}
 	ball->draw(pdc,1);
 	
 	if (!enemy.empty()) {
 		for (int i = 0; i < enemy.size(); i++) {
-			enemy[i]->draw(pdc,0);
+			enemy[i]->draw(pdc);
 		}
+	}*/
+	for (int i = 0; i < obj.size(); i++) {
+		obj[i]->draw(pdc);
 	}
 }
 
@@ -64,12 +67,7 @@ void MyWindow::onTimer(wxTimerEvent & evt)
 {
 	//static int counter = 0;
 	//wxMessageOutputDebug().Printf("wxTimer event %d.", counter++);
-	ball->move();
-	if (!bullets.empty()) {
-		for (int i = 0; i < bullets.size(); i++) {
-			bullets[i]->move();
-		}
-	}
+	for (int i = 0; i < obj.size(); i++) obj[i]->move();
 	Refresh(0);
 	//Update();
 }
@@ -123,9 +121,12 @@ void MyWindow::shootBall(wxMouseEvent & evt)
 {
 	if (shooter == nullptr) {
 		wxPoint mousePos = evt.GetPosition();
-
-		bullets.push_back(new Bullet(ball->getX(), ball->getY()));
-		bullets.back()->shoot(mousePos.x, mousePos.y);
+		Bullet* bull = new Bullet(ball->getX(), ball->getY());
+		bull->setOwner(1);
+		bull->shoot(mousePos.x, mousePos.y);
+		//bullets.push_back(bull);
+		
+		obj.push_back(bull);
 		shooter = new wxTimer(this, TIMER_ID + 1);
 		shooter->StartOnce(200); // shoot delay (ms)
 	}
@@ -142,6 +143,8 @@ void MyWindow::enemySpawn(wxTimerEvent &evt)
 	int randX = rand() % 950 + 50;
 	int randY = rand() % 650 + 50;
 	int randTime = rand() % 4000 + 1000;
-	enemy.push_back(new Ball(randX, randY, 25)); // spawn enemy on random position
+	Ball* enem = new Ball(randX, randY, 25);
+	//enemy.push_back(enem); // spawn enemy on random position
+	obj.push_back(enem);
 	spawner->Start(randTime); // re-generate random spawner delay(ms)
 }

@@ -4,7 +4,8 @@
 
 void Bullet::draw(wxAutoBufferedPaintDC &dc)
 {
-	dc.SetBrush(wxBrush(wxColor(*wxWHITE)));
+	if (owner == 1) dc.SetBrush(wxBrush(wxColor(*wxWHITE)));
+	else dc.SetBrush(wxBrush(wxColor(*wxRED)));
 	//dc.SetPen(wxPen(wxColor(*wxRED), 1, wxPENSTYLE_SOLID)); //ball outline
 	dc.DrawCircle(wxPoint(x, y), 10);
 }
@@ -34,6 +35,7 @@ Bullet::Bullet(int x, int y)
 {
 	this->x = x;
 	this->y = y;
+	type = 2;
 }
 
 Bullet::Bullet()

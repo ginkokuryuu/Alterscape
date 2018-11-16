@@ -1,8 +1,8 @@
 #pragma once
 #include "wx\wx.h"
+#include "Ball.h"
+#include "Bullet.h"
 #include <vector>
-class Ball;
-class Bullet;
 class MyWindow :
 	public wxWindow
 {
@@ -17,9 +17,10 @@ public:
 	void delayShoot(wxTimerEvent &evt);
 	void enemySpawn(wxTimerEvent &evt);
 private:
-	std::vector<Bullet*> bullets;
+	//std::vector<Bullet*> bullets;
 	Ball *ball;
-	std::vector<Ball*> enemy;
+	//std::vector<Ball*> enemy;
+	std::vector<GameObject*> obj;
 	wxTimer *timer;
 	wxTimer *shooter;
 	wxTimer *spawner;

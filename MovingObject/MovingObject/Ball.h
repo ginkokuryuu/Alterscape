@@ -1,7 +1,9 @@
 #pragma once
+#include "GameObject.h"
 #include "wx\wx.h"
 #include "wx\dcbuffer.h"
 class Ball
+	: public GameObject
 {
 private:
 	int x;
@@ -15,7 +17,7 @@ private:
 public:
 	Ball();
 	Ball(int x, int y, int r);
-	void draw(wxAutoBufferedPaintDC &dc, bool isPlayer);
+	void draw(wxAutoBufferedPaintDC &dc);
 	void move();
 	void moveX();
 	void moveY();

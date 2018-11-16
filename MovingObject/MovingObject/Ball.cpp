@@ -12,11 +12,12 @@ Ball::Ball(int x, int y, int r)
 	this->x = x;
 	this->y = y;
 	this->r = r;
+	type = 1;
 }
 
-void Ball::draw(wxAutoBufferedPaintDC & dc, bool isPlayer)
+void Ball::draw(wxAutoBufferedPaintDC & dc)
 {
-	if (isPlayer) dc.SetBrush(wxBrush(wxColor(*wxWHITE)));
+	if (owner == 1) dc.SetBrush(wxBrush(wxColor(*wxWHITE)));
 	else dc.SetBrush(wxBrush(wxColor(*wxRED)));
 	//dc.SetPen(wxPen(wxColor(*wxRED), 1, wxPENSTYLE_SOLID)); //ball outline
 	dc.DrawCircle(wxPoint(x, y), r);
@@ -27,7 +28,7 @@ void Ball::move()
 	int tx = x + vx;
 	int ty = y + vy;
 	if (tx > 0 && tx < 1024 && ty > 0 && ty < 768) {
-		wxMessageOutputDebug().Printf("%d %d", x, y);
+		//wxMessageOutputDebug().Printf("%d %d", x, y);
 		x += vx;
 		y += vy;
 		/*if (ax > 0) {
@@ -98,7 +99,6 @@ int Ball::getY()
 {
 	return y;
 }
-
 
 Ball::~Ball()
 {
