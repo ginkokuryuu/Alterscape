@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
+﻿<?xml version="1.0" encoding="utf-8"?>
 <Project DefaultTargets="Build" ToolsVersion="15.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup Label="ProjectConfigurations">
     <ProjectConfiguration Include="Debug|Win32">
@@ -20,8 +20,8 @@
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <VCProjectVersion>15.0</VCProjectVersion>
-    <ProjectGuid>{b9cb223d-3c20-430a-a682-785aac433d97}</ProjectGuid>
-    <RootNamespace>MovingObject</RootNamespace>
+    <ProjectGuid>{b03b0227-07b0-4096-a190-04ec2e1d6206}</ProjectGuid>
+    <RootNamespace>Alterscape</RootNamespace>
     <WindowsTargetPlatformVersion>10.0.17134.0</WindowsTargetPlatformVersion>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
@@ -77,7 +77,7 @@
       <SDLCheck>true</SDLCheck>
       <ConformanceMode>false</ConformanceMode>
       <AdditionalIncludeDirectories>$(WXWIN)\include;$(WXWIN)\lib\vc_lib\mswud;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      <PreprocessorDefinitions>WIN32;__WXMSW__;_WINDOWS;_DEBUG;__WXDEBUG__;_CRT_SECURE_NO_WARNINGS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>WIN32;__WXMSW__;_WINDOWS;_DEBUG;__WXDEBUG__;%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ClCompile>
     <Link>
       <AdditionalLibraryDirectories>$(WXWIN)\lib\vc_lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
@@ -121,21 +121,21 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="Ball.cpp" />
     <ClCompile Include="Bullet.cpp" />
+    <ClCompile Include="CharOne.cpp" />
     <ClCompile Include="GameObject.cpp" />
+    <ClCompile Include="GameWindow.cpp" />
     <ClCompile Include="Main.cpp" />
-    <ClCompile Include="MyApp.cpp" />
-    <ClCompile Include="MyFrame.cpp" />
-    <ClCompile Include="MyWindow.cpp" />
+    <ClCompile Include="Alterscape.cpp" />
+    <ClCompile Include="GameFrame.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="Ball.h" />
+    <ClInclude Include="Alterscape.h" />
     <ClInclude Include="Bullet.h" />
+    <ClInclude Include="CharOne.h" />
+    <ClInclude Include="GameFrame.h" />
     <ClInclude Include="GameObject.h" />
-    <ClInclude Include="MyApp.h" />
-    <ClInclude Include="MyFrame.h" />
-    <ClInclude Include="MyWindow.h" />
+    <ClInclude Include="GameWindow.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

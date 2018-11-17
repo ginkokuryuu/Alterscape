@@ -6,8 +6,6 @@ class Bullet
 	: public GameObject
 {
 private:
-	int x;
-	int y;
 	double vx = 0;
 	double vy = 0;
 	int v = 15;
@@ -15,6 +13,7 @@ public:
 	void draw(wxAutoBufferedPaintDC &dc);
 	void move();
 	void shoot(int x, int y);
+	bool isCollidingWith(GameObject* o);
 	Bullet(int x, int y);
 	Bullet();
 	~Bullet();

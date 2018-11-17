@@ -1,14 +1,14 @@
-#include "MyFrame.h"
-#include "MyWindow.h"
-wxBEGIN_EVENT_TABLE(MyFrame, wxFrame)
-	EVT_MENU(wxID_EXIT, MyFrame::OnQuit)
-	EVT_MENU(wxID_ABOUT, MyFrame::OnAbout)
+#include "GameFrame.h"
+#include "GameWindow.h"
+wxBEGIN_EVENT_TABLE(GameFrame, wxFrame)
+EVT_MENU(wxID_EXIT, GameFrame::OnQuit)
+EVT_MENU(wxID_ABOUT, GameFrame::OnAbout)
 wxEND_EVENT_TABLE()
 
-MyFrame::MyFrame(const wxString & title)
-	: wxFrame(NULL, wxID_ANY, title, wxDefaultPosition, wxDefaultSize, wxDEFAULT_FRAME_STYLE ^ wxRESIZE_BORDER)
+GameFrame::GameFrame(const wxString & title)
+	: wxFrame(NULL, wxID_ANY, title, wxDefaultPosition, wxDefaultSize, wxDEFAULT_FRAME_STYLE & ~wxRESIZE_BORDER & ~wxMAXIMIZE_BOX)
 {
-	
+
 #if wxUSE_MENUS
 	wxMenu *fileMenu = new wxMenu;
 	wxMenu *helpMenu = new wxMenu;
@@ -19,15 +19,15 @@ MyFrame::MyFrame(const wxString & title)
 	menuBar->Append(helpMenu, "&Help");
 	SetMenuBar(menuBar);
 #endif
-	window = new MyWindow(this);
-	window->SetInitialSize(wxDefaultSize);
+	mainwindow = new GameWindow(this);
+	mainwindow->SetInitialSize(wxDefaultSize);
 	SetInitialSize(wxDefaultSize);
 }
-void MyFrame::OnQuit(wxCommandEvent& WXUNUSED(event))
+void GameFrame::OnQuit(wxCommandEvent& WXUNUSED(event))
 {
 	Close(true);
 }
-void MyFrame::OnAbout(wxCommandEvent& WXUNUSED(event))
+void GameFrame::OnAbout(wxCommandEvent& WXUNUSED(event))
 {
 	wxMessageBox(wxString::Format
 	(

@@ -1,13 +1,13 @@
-#include "Ball.h"
+#include "CharOne.h"
 #include <cmath>
 #include <algorithm>
 
-Ball::Ball()
+CharOne::CharOne()
 {
 }
 
 
-Ball::Ball(int x, int y, int r)
+CharOne::CharOne(int x, int y, int r)
 {
 	this->x = x;
 	this->y = y;
@@ -15,7 +15,12 @@ Ball::Ball(int x, int y, int r)
 	type = 1;
 }
 
-void Ball::draw(wxAutoBufferedPaintDC & dc)
+bool CharOne::isCollidingWith(GameObject * o)
+{
+	return false;
+}
+
+void CharOne::draw(wxAutoBufferedPaintDC & dc)
 {
 	if (owner == 1) dc.SetBrush(wxBrush(wxColor(*wxWHITE)));
 	else dc.SetBrush(wxBrush(wxColor(*wxRED)));
@@ -23,7 +28,7 @@ void Ball::draw(wxAutoBufferedPaintDC & dc)
 	dc.DrawCircle(wxPoint(x, y), r);
 }
 
-void Ball::move()
+void CharOne::move()
 {
 	int tx = x + vx;
 	int ty = y + vy;
@@ -60,46 +65,36 @@ void Ball::move()
 	}
 }
 
-void Ball::moveX()
+void CharOne::moveX()
 {
 	vx = a;
 }
 
-void Ball::moveY()
+void CharOne::moveY()
 {
 	vy = a;
 }
 
-void Ball::moveMX()
+void CharOne::moveMX()
 {
 	vx = -a;
 }
 
-void Ball::moveMY()
+void CharOne::moveMY()
 {
 	vy = -a;
 }
 
-void Ball::stopX()
+void CharOne::stopX()
 {
 	vx = 0;
 }
 
-void Ball::stopY()
+void CharOne::stopY()
 {
 	vy = 0;
 }
 
-int Ball::getX()
-{
-	return x;
-}
-
-int Ball::getY()
-{
-	return y;
-}
-
-Ball::~Ball()
+CharOne::~CharOne()
 {
 }
