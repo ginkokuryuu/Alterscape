@@ -1,4 +1,5 @@
 #include "CharOne.h"
+#include "Weapon.h"
 #include "GameWindow.h"
 #include <cmath>
 #include <algorithm>
@@ -9,6 +10,7 @@
 BEGIN_EVENT_TABLE(CharOne, wxEvtHandler)
 	EVT_TIMER(TIMER_ID, CharOne::botShoot)
 	EVT_TIMER(TIMER_ID + 1, CharOne::botMove)
+	EVT_TIMER(TIMER_ID + 2, CharOne::changeWeapon)
 END_EVENT_TABLE()
 
 CharOne::CharOne()
@@ -27,7 +29,9 @@ CharOne::CharOne(GameWindow* parent, int x, int y, int r)
 	botshooter->Start(rand() % 1000 + 100);
 	botmover = new wxTimer(this, TIMER_ID + 1);
 	botmover->Start(100);
-	//weapon = new Weapon(parent, this);
+	weaponchanger = new wxTimer(this, TIMER_ID + 2);
+	weaponchanger->Start(rand() % 3000 + 7000);
+	weapon = new Weapon(parent, this);
 }
 
 bool CharOne::isCollidingWith(GameObject * o)
@@ -41,19 +45,24 @@ void CharOne::draw(wxAutoBufferedPaintDC & dc)
 	else dc.SetBrush(wxBrush(wxColor(*wxRED)));
 	//dc.SetPen(wxPen(wxColor(*wxRED), 1, wxPENSTYLE_SOLID)); //ball outline
 	dc.DrawCircle(wxPoint(x, y), r);
+	if (weapon->getType() == 3) {
+		dc.DrawArc(wxPoint(x + r + 5, y), wxPoint(x, y - r - 5), wxPoint(x, y));
+	}
 }
 
 void CharOne::botShoot(wxTimerEvent & evt)
 {
 	if (owner != 1) {
 		if (parent->isPlayerAlive()) {
-			Bullet* bullet = new Bullet(x, y);
-			bullet->shoot(parent->getPlayerX(), parent->getPlayerY());
-			parent->addObject(bullet);
+			shoot(parent->getPlayerX(), parent->getPlayerY());
 			botshooter->Start(rand() % 1000 + 500);
 		}
 	}
-	else botshooter->Stop();
+	else {
+		botshooter->Stop();
+		//shoot(parent->getMouseX(), parent->getMouseY());
+	}
+	
 }
 
 void CharOne::botMove(wxTimerEvent & evt)
@@ -100,9 +109,17 @@ void CharOne::botMove(wxTimerEvent & evt)
 	else botmover->Stop();
 }
 
+void CharOne::changeWeapon(wxTimerEvent & evt)
+{
+	int neww = rand() % 2 + 1;
+	while (neww == weapon->getType()) neww = rand() % 2 + 1;
+	weapon->setType(neww);
+	weaponchanger->Start(rand() % 3000 + 7000);
+}
+
 void CharOne::shoot(int x, int y)
 {
-	//weapon->shoot(x, y);
+	weapon->shoot(x, y);
 }
 
 int CharOne::getHP()
@@ -181,4 +198,6 @@ CharOne::~CharOne()
 {
 	delete botshooter;
 	delete botmover;
+	delete weapon;
+	delete weaponchanger;
 }

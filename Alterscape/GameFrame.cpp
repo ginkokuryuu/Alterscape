@@ -1,5 +1,4 @@
 #include "GameFrame.h"
-#include "GameWindow.h"
 wxBEGIN_EVENT_TABLE(GameFrame, wxFrame)
 EVT_MENU(wxID_EXIT, GameFrame::OnQuit)
 EVT_MENU(wxID_ABOUT, GameFrame::OnAbout)
@@ -8,7 +7,6 @@ wxEND_EVENT_TABLE()
 GameFrame::GameFrame(const wxString & title)
 	: wxFrame(NULL, wxID_ANY, title, wxDefaultPosition, wxDefaultSize, wxDEFAULT_FRAME_STYLE & ~wxRESIZE_BORDER & ~wxMAXIMIZE_BOX)
 {
-	SetInitialSize(wxDefaultSize);
 #if wxUSE_MENUS
 	wxMenu *fileMenu = new wxMenu;
 	wxMenu *helpMenu = new wxMenu;
@@ -19,8 +17,8 @@ GameFrame::GameFrame(const wxString & title)
 	menuBar->Append(helpMenu, "&Help");
 	SetMenuBar(menuBar);
 #endif
-	gamewindow = new GameWindow(this);
-	gamewindow->SetInitialSize(wxDefaultSize);
+	menuwindow = new MenuWindow(this);
+	menuwindow->SetInitialSize(wxGetDisplaySize());
 }
 void GameFrame::OnQuit(wxCommandEvent& WXUNUSED(event))
 {
@@ -40,4 +38,22 @@ void GameFrame::OnAbout(wxCommandEvent& WXUNUSED(event))
 		"About wxWidgets minimal sample",
 		wxOK | wxICON_INFORMATION,
 		this);
+}
+
+void GameFrame::LoadGame()
+{
+	menuwindow->Show(false);
+	if (gamewindow != nullptr) gamewindow->Destroy();
+	gamewindow = new GameWindow(this);
+	gamewindow->Show(true);
+	gamewindow->SetInitialSize(wxGetDisplaySize());
+	gamewindow->SetFocus();
+}
+
+void GameFrame::GameOver()
+{
+	menuwindow->SetFocus();
+	gamewindow->Show(false);
+	menuwindow->Show(true);
+	wxMessageOutputDebug().Printf("jancuk");
 }

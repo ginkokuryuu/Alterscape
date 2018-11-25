@@ -1,4 +1,5 @@
 #include "GameWindow.h"
+#include "GameFrame.h"
 #include "CharOne.h"
 #include <stdlib.h>
 #include <time.h>
@@ -12,12 +13,13 @@ BEGIN_EVENT_TABLE(GameWindow, wxWindow)
 	EVT_KEY_DOWN(GameWindow::moveChar)
 	EVT_KEY_UP(GameWindow::stopChar)
 	EVT_LEFT_DOWN(GameWindow::shootChar)
+	EVT_MOTION(GameWindow::updateMouse)
 END_EVENT_TABLE()
 
 GameWindow::GameWindow(wxFrame * frame)
 	: wxWindow(frame, wxID_ANY)
 {
-	//SetInitialSize(wxSize(1024, 768));
+	parentWindow = (GameFrame*)frame;
 	SetBackgroundStyle(wxBG_STYLE_PAINT);
 	SetBackgroundColour(*wxBLACK);
 	for (int i = 0; i < 18; i++) {
@@ -53,6 +55,11 @@ void GameWindow::onPaint(wxPaintEvent & evt)
 
 void GameWindow::onTimer(wxTimerEvent & evt)
 {
+	if (!isPlayerAlive()) {
+		timer->Stop();
+		parentWindow->GameOver();
+		return;
+	}
 	for (auto it = obj.begin(); it != obj.end();) {
 		(*it)->move();
 		updateGrid(*it);
@@ -120,11 +127,7 @@ void GameWindow::shootChar(wxMouseEvent & evt)
 {
 	if (shooter == nullptr && player != nullptr) {
 		wxPoint mousePos = evt.GetPosition();
-		Bullet* bull = new Bullet(player->GameObject::getX(), player->GameObject::getY());
-		bull->setOwner(1);
-		bull->shoot(mousePos.x, mousePos.y);
-		updateGrid(bull);
-		addObject(bull);
+		player->shoot(mousePos.x, mousePos.y);
 		shooter = new wxTimer(this, TIMER_ID + 1);
 		shooter->StartOnce(200); // shoot delay (ms)
 	}
@@ -200,6 +203,13 @@ void GameWindow::addObject(GameObject * object)
 	obj.insert(object);
 }
 
+void GameWindow::deleteObject(GameObject * object)
+{
+	grid[object->getGridY()][object->getGridX()].erase(object);
+	delete object;
+	obj.erase(object);
+}
+
 int GameWindow::getPlayerX()
 {
 	return player->getX();
@@ -217,6 +227,23 @@ int GameWindow::getGridSize()
 
 bool GameWindow::isPlayerAlive()
 {
+
 	if (player == nullptr) return false;
 	else return true;
+}
+
+int GameWindow::getMouseX()
+{
+	return mouseX;
+}
+
+int GameWindow::getMouseY()
+{
+	return mouseY;
+}
+
+void GameWindow::updateMouse(wxMouseEvent & evt)
+{
+	mouseX = evt.GetPosition().x;
+	mouseY = evt.GetPosition().y;
 }

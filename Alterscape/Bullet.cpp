@@ -1,6 +1,12 @@
 #include "Bullet.h"
+#include "Weapon.h"
+#include "GameWindow.h"
 #include <cmath>
 #include <algorithm>
+
+BEGIN_EVENT_TABLE(Bullet, wxEvtHandler)
+	EVT_TIMER(-1, Bullet::outRange)
+END_EVENT_TABLE()
 
 void Bullet::draw(wxAutoBufferedPaintDC &dc)
 {
@@ -43,12 +49,53 @@ bool Bullet::isCollidingWith(GameObject * o)
 	else return false;
 }
 
-Bullet::Bullet(int x, int y)
+void Bullet::outRange(wxTimerEvent & evt)
 {
+	window->deleteObject(this);
+}
+
+double Bullet::getVx()
+{
+	return vx;
+}
+
+double Bullet::getVy()
+{
+	return vy;
+}
+
+void Bullet::setVx(double vx)
+{
+	this->vx = vx;
+}
+
+void Bullet::setVy(double vy)
+{
+	this->vy = vy;
+}
+
+Bullet::Bullet(Weapon* parent, int x, int y, GameWindow* window)
+{
+	this->parent = parent;
 	this->x = x;
 	this->y = y;
-	r = 10;
+	this->window = window;
 	type = 2;
+	switch (parent->getType())
+	{
+	case 1:
+		r = 10;
+		range = new wxTimer(this, -1);
+		range->StartOnce(1200);
+		break;
+	case 2:
+		r = 5;
+		range = new wxTimer(this, -1);
+		range->StartOnce(600);
+		break;
+	default:
+		break;
+	}
 }
 
 Bullet::Bullet()
@@ -58,4 +105,5 @@ Bullet::Bullet()
 
 Bullet::~Bullet()
 {
+	delete range;
 }
