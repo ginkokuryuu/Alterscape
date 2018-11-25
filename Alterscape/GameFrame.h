@@ -10,6 +10,6 @@ public:
 	void OnQuit(wxCommandEvent& event);
 	void OnAbout(wxCommandEvent& event);
 private:
-	GameWindow *mainwindow;
+	GameWindow *gamewindow;
 	wxDECLARE_EVENT_TABLE();
 };

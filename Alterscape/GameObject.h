@@ -2,6 +2,7 @@
 #include "wx\wx.h"
 #include "wx\dcbuffer.h"
 class GameObject
+	: public wxEvtHandler
 {
 protected:
 	int x;
@@ -21,6 +22,8 @@ public:
 	void setGridY(int gridSize);
 	int getX();
 	int getY();
+	void setX(int x);
+	void setY(int y);
 	int getR();
 	int getObjType();
 	int getOwner();

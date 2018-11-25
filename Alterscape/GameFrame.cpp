@@ -8,7 +8,7 @@ wxEND_EVENT_TABLE()
 GameFrame::GameFrame(const wxString & title)
 	: wxFrame(NULL, wxID_ANY, title, wxDefaultPosition, wxDefaultSize, wxDEFAULT_FRAME_STYLE & ~wxRESIZE_BORDER & ~wxMAXIMIZE_BOX)
 {
-
+	SetInitialSize(wxDefaultSize);
 #if wxUSE_MENUS
 	wxMenu *fileMenu = new wxMenu;
 	wxMenu *helpMenu = new wxMenu;
@@ -19,9 +19,8 @@ GameFrame::GameFrame(const wxString & title)
 	menuBar->Append(helpMenu, "&Help");
 	SetMenuBar(menuBar);
 #endif
-	mainwindow = new GameWindow(this);
-	mainwindow->SetInitialSize(wxDefaultSize);
-	SetInitialSize(wxDefaultSize);
+	gamewindow = new GameWindow(this);
+	gamewindow->SetInitialSize(wxDefaultSize);
 }
 void GameFrame::OnQuit(wxCommandEvent& WXUNUSED(event))
 {

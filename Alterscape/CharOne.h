@@ -1,21 +1,34 @@
 #pragma once
-#include "GameObject.h"
+//#include "Weapon.h"
 #include "wx\wx.h"
 #include "wx\dcbuffer.h"
+#include "GameObject.h"
+#include "Bullet.h"
+class GameWindow;
 class CharOne
 	: public GameObject
 {
 private:
+	//Weapon* weapon;
 	int vx = 0;
 	int vy = 0;
 	int ax = 0;
 	int ay = 0;
 	int a = 5;
+	int hp = 100;
+	wxTimer *botshooter;
+	wxTimer *botmover;
+	GameWindow* parent;
+	DECLARE_EVENT_TABLE()
 public:
 	CharOne();
-	CharOne(int x, int y, int r);
+	CharOne(GameWindow* parent, int x, int y, int r);
 	bool isCollidingWith(GameObject* o);
 	void draw(wxAutoBufferedPaintDC &dc);
+	void botShoot(wxTimerEvent &evt);
+	void botMove(wxTimerEvent &evt);
+	void shoot(int x, int y);
+	int getHP();
 	void move();
 	void moveX();
 	void moveY();

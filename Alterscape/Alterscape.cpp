@@ -5,9 +5,9 @@ bool Alterscape::OnInit()
 	if (!wxApp::OnInit())
 		return false;
 	GameFrame *mainframe = new GameFrame("Alterscape");
-	mainframe->SetClientSize(1024, 768);
+	/*mainframe->SetClientSize(1024, 768);
 	mainframe->Centre();
-	mainframe->Show(true);
-
+	mainframe->Show(true);*/
+	mainframe->ShowFullScreen(true);
 	return true;
 }

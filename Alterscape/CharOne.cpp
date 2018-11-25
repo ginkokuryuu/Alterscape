@@ -1,18 +1,33 @@
 #include "CharOne.h"
+#include "GameWindow.h"
 #include <cmath>
 #include <algorithm>
+#include <stdlib.h>
+#include <time.h>
+#define TIMER_ID 2100
+
+BEGIN_EVENT_TABLE(CharOne, wxEvtHandler)
+	EVT_TIMER(TIMER_ID, CharOne::botShoot)
+	EVT_TIMER(TIMER_ID + 1, CharOne::botMove)
+END_EVENT_TABLE()
 
 CharOne::CharOne()
 {
 }
 
 
-CharOne::CharOne(int x, int y, int r)
+CharOne::CharOne(GameWindow* parent, int x, int y, int r)
 {
+	this->parent = parent;
 	this->x = x;
 	this->y = y;
 	this->r = r;
 	type = 1;
+	botshooter = new wxTimer(this, TIMER_ID);
+	botshooter->Start(rand() % 1000 + 100);
+	botmover = new wxTimer(this, TIMER_ID + 1);
+	botmover->Start(100);
+	//weapon = new Weapon(parent, this);
 }
 
 bool CharOne::isCollidingWith(GameObject * o)
@@ -28,11 +43,78 @@ void CharOne::draw(wxAutoBufferedPaintDC & dc)
 	dc.DrawCircle(wxPoint(x, y), r);
 }
 
+void CharOne::botShoot(wxTimerEvent & evt)
+{
+	if (owner != 1) {
+		if (parent->isPlayerAlive()) {
+			Bullet* bullet = new Bullet(x, y);
+			bullet->shoot(parent->getPlayerX(), parent->getPlayerY());
+			parent->addObject(bullet);
+			botshooter->Start(rand() % 1000 + 500);
+		}
+	}
+	else botshooter->Stop();
+}
+
+void CharOne::botMove(wxTimerEvent & evt)
+{
+	if (owner != 1) {
+		stopX();
+		stopY();
+		int axis = rand() % 8;
+		switch (axis)
+		{
+		case 0:
+			moveX();
+			break;
+		case 1:
+			moveY();
+			break;
+		case 2:
+			moveMX();
+			break;
+		case 3:
+			moveMY();
+			break;
+		case 4:
+			moveX();
+			moveY();
+			break;
+		case 5:
+			moveY();
+			moveMX();
+			break;
+		case 6:
+			moveMX();
+			moveMY();
+			break;
+		case 7:
+			moveMY();
+			moveX();
+			break;
+		default:
+			break;
+		}
+		botmover->Start(rand() % 1000);
+	}
+	else botmover->Stop();
+}
+
+void CharOne::shoot(int x, int y)
+{
+	//weapon->shoot(x, y);
+}
+
+int CharOne::getHP()
+{
+	return hp;
+}
+
 void CharOne::move()
 {
 	int tx = x + vx;
 	int ty = y + vy;
-	if (tx > 0 && tx < 1024 && ty > 0 && ty < 768) {
+	if (tx > r && tx < wxGetDisplaySize().GetWidth() - r && ty > r && ty < wxGetDisplaySize().GetHeight() - r) {
 		//wxMessageOutputDebug().Printf("%d %d", x, y);
 		x += vx;
 		y += vy;
@@ -57,10 +139,10 @@ void CharOne::move()
 			else if (vy < 0) vy += a;
 		}*/
 	}
-	else if (tx < 0 || tx > 1024) {
+	else if (tx < r || tx > wxGetDisplaySize().GetWidth() - r) {
 		vx = ax = 0;
 	}
-	else if (ty < 0 || ty > 768) {
+	else if (ty < r || ty > wxGetDisplaySize().GetHeight() - r) {
 		vy = ay = 0;
 	}
 }
@@ -97,4 +179,6 @@ void CharOne::stopY()
 
 CharOne::~CharOne()
 {
+	delete botshooter;
+	delete botmover;
 }

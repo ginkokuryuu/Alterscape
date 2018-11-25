@@ -1,8 +1,8 @@
 #pragma once
 #include "wx\wx.h"
-#include "CharOne.h"
-#include "Bullet.h"
 #include <unordered_set>
+class CharOne;
+class GameObject;
 class GameWindow :
 	public wxWindow
 {
@@ -18,10 +18,15 @@ public:
 	void enemySpawn(wxTimerEvent &evt);
 	void checkCollision();
 	void updateGrid(GameObject* object);
+	void addObject(GameObject* object);
+	int getPlayerX();
+	int getPlayerY();
+	int getGridSize();
+	bool isPlayerAlive();
 private:
 	CharOne *player;
 	std::unordered_set<GameObject*> obj;
-	std::unordered_set<GameObject*> grid[13][17]; // 12 x 16 @64px gridtiles
+	std::unordered_set<GameObject*> grid[18][31]; // 12 x 16 @64px gridtiles
 	int gridSize = 64;
 	wxTimer *timer;
 	wxTimer *shooter;
