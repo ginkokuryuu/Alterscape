@@ -1,5 +1,6 @@
 #include "CharOne.h"
 #include "Weapon.h"
+#include "Shield.h"
 #include "GameWindow.h"
 #include <cmath>
 #include <algorithm>
@@ -41,13 +42,11 @@ bool CharOne::isCollidingWith(GameObject * o)
 
 void CharOne::draw(wxAutoBufferedPaintDC & dc)
 {
+	if (shield != nullptr) shield->draw(dc);
 	if (owner == 1) dc.SetBrush(wxBrush(wxColor(*wxWHITE)));
 	else dc.SetBrush(wxBrush(wxColor(*wxRED)));
 	//dc.SetPen(wxPen(wxColor(*wxRED), 1, wxPENSTYLE_SOLID)); //ball outline
 	dc.DrawCircle(wxPoint(x, y), r);
-	if (weapon->getType() == 3) {
-		dc.DrawArc(wxPoint(x + r + 5, y), wxPoint(x, y - r - 5), wxPoint(x, y));
-	}
 }
 
 void CharOne::botShoot(wxTimerEvent & evt)
@@ -111,8 +110,8 @@ void CharOne::botMove(wxTimerEvent & evt)
 
 void CharOne::changeWeapon(wxTimerEvent & evt)
 {
-	int neww = rand() % 2 + 1;
-	while (neww == weapon->getType()) neww = rand() % 2 + 1;
+	int neww = rand() % 2 + 2;
+	while (neww == weapon->getType()) neww = rand() % 2 + 2;
 	weapon->setType(neww);
 	weaponchanger->Start(rand() % 3000 + 7000);
 }
@@ -194,10 +193,34 @@ void CharOne::stopY()
 	vy = 0;
 }
 
+int CharOne::getWeaponType()
+{
+	return weapon->getType();
+}
+
+Shield * CharOne::getShieldPtr()
+{
+	return shield;
+}
+
+void CharOne::setShield()
+{
+	shield = new Shield(this, parent);
+}
+
+void CharOne::deleteShield()
+{
+	if (shield != nullptr) {
+		parent->deleteObject(shield);
+		shield = nullptr;
+	}
+}
+
 CharOne::~CharOne()
 {
 	delete botshooter;
 	delete botmover;
 	delete weapon;
 	delete weaponchanger;
+	if (shield != nullptr) delete shield;
 }

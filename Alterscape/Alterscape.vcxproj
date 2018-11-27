@@ -129,6 +129,7 @@
     <ClCompile Include="Alterscape.cpp" />
     <ClCompile Include="GameFrame.cpp" />
     <ClCompile Include="MenuWindow.cpp" />
+    <ClCompile Include="Shield.cpp" />
     <ClCompile Include="Weapon.cpp" />
   </ItemGroup>
   <ItemGroup>
@@ -139,6 +140,7 @@
     <ClInclude Include="GameObject.h" />
     <ClInclude Include="GameWindow.h" />
     <ClInclude Include="MenuWindow.h" />
+    <ClInclude Include="Shield.h" />
     <ClInclude Include="Weapon.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

@@ -50,6 +50,10 @@ GameObject::~GameObject()
 {
 }
 
+void GameObject::move()
+{
+}
+
 int GameObject::getGridX()
 {
 	return gridX;

@@ -42,7 +42,7 @@ GameWindow::~GameWindow()
 	spawner->Stop();
 	delete timer;
 	delete spawner;
-	for (auto it : obj) delete it;
+	for (auto it : obj) if (it != nullptr) delete it;
 }
 
 void GameWindow::onPaint(wxPaintEvent & evt)
@@ -50,7 +50,7 @@ void GameWindow::onPaint(wxPaintEvent & evt)
 	wxAutoBufferedPaintDC pdc(this);
 	pdc.SetBrush(wxBrush(wxColor(*wxBLACK)));
 	pdc.DrawRectangle(wxPoint(0, 0), wxGetDisplaySize());
-	for (auto it : obj) it->draw(pdc);
+	for (auto it : obj) if (it->getObjType() != 3) it->draw(pdc);
 }
 
 void GameWindow::onTimer(wxTimerEvent & evt)
@@ -129,7 +129,7 @@ void GameWindow::shootChar(wxMouseEvent & evt)
 		wxPoint mousePos = evt.GetPosition();
 		player->shoot(mousePos.x, mousePos.y);
 		shooter = new wxTimer(this, TIMER_ID + 1);
-		shooter->StartOnce(200); // shoot delay (ms)
+		shooter->StartOnce(200 * player->getWeaponType()); // shoot delay (ms)
 	}
 }
 
@@ -170,10 +170,19 @@ void GameWindow::checkCollision() // all object collision (collision handler bar
 				if (gy + y >= 0 && gy + y < 18 && gx + x >= 0 && gx + x < 31) {
 					for (auto it2 = grid[gy + y][gx + x].begin(); it2 != grid[gy + y][gx + x].end();) {
 						if (*it1 != *it2 && (*it1)->isCollidingWith(*it2)) {
-							if (*it2 == player) player = nullptr;
-							obj.erase(*it2);
-							delete *it2;
-							it2 = grid[gy + y][gx + x].erase(it2);
+							if ((*it2)->getObjType() == 1) {
+								if (*it2 == player) player = nullptr;
+								if (((CharOne*)(*it2))->getShieldPtr() != nullptr) ((CharOne*)(*it2))->deleteShield();
+								obj.erase(*it2);
+								delete *it2;
+								it2 = grid[gy + y][gx + x].erase(it2);
+								wxMessageOutputDebug().Printf("aaa");
+							}
+							else if ((*it2)->getObjType() == 3) {
+								//((Shield*)(*it2))->deflect((Bullet*)(*it1));
+								++it2;
+							}
+							else ++it2;
 						}
 						else ++it2;
 					}

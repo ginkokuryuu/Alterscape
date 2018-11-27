@@ -3,12 +3,14 @@
 #include "wx\dcbuffer.h"
 #include "GameObject.h"
 #include "Bullet.h"
+#include "Shield.h"
 class Weapon;
 class GameWindow;
 class CharOne
 	: public GameObject
 {
 private:
+	Shield* shield = nullptr;
 	Weapon* weapon;
 	int vx = 0;
 	int vy = 0;
@@ -38,6 +40,10 @@ public:
 	void moveMY();
 	void stopX();
 	void stopY();
+	int getWeaponType();
+	Shield* getShieldPtr();
+	void setShield();
+	void deleteShield();
 	~CharOne();
 };
 

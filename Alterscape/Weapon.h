@@ -1,16 +1,16 @@
 #pragma once
 #include "Bullet.h"
-class GameObject;
+class CharOne;
 class GameWindow;
 class Weapon
 {
 private:
 	int type;
-	GameObject* owner;
+	CharOne* owner;
 	GameWindow* parent;
 public:
 	void shoot(int x, int y);
-	Weapon(GameWindow* parent, GameObject* owner);
+	Weapon(GameWindow* parent, CharOne* owner);
 	int getType();
 	void setType(int type);
 	Weapon();

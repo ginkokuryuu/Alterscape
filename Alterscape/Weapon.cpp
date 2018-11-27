@@ -1,10 +1,12 @@
 #include "Weapon.h"
 #include "GameWindow.h"
+#include "CharOne.h"
 #include <math.h>
 #define PI 3.14159265
 void Weapon::shoot(int x, int y)
 {
 	if (type == 1) {
+		if (owner->getShieldPtr() != nullptr) owner->deleteShield();
 		Bullet* bullet = new Bullet(this, owner->getX(), owner->getY(), parent);
 		bullet->setOwner(owner->getOwner());
 		bullet->shoot(x, y);
@@ -12,6 +14,7 @@ void Weapon::shoot(int x, int y)
 		parent->updateGrid(bullet);
 	}
 	else if (type == 2) {
+		if (owner->getShieldPtr() != nullptr) owner->deleteShield();
 		for (int i = -2; i < 3; i++) {
 			Bullet* bullet = new Bullet(this, owner->getX(), owner->getY(), parent);
 			bullet->setOwner(owner->getOwner());
@@ -24,13 +27,20 @@ void Weapon::shoot(int x, int y)
 			parent->updateGrid(bullet);
 		}
 	}
+	else if (type == 3) {
+		if (owner->getShieldPtr() == nullptr) {
+			owner->setShield();
+			parent->addObject(owner->getShieldPtr());
+			parent->updateGrid(owner->getShieldPtr());
+		}
+	}
 }
 
-Weapon::Weapon(GameWindow * parent, GameObject * owner)
+Weapon::Weapon(GameWindow * parent, CharOne * owner)
 {
 	this->parent = parent;
 	this->owner = owner;
-	type = rand() % 2 + 1;
+	type = rand() % 3 + 1;
 }
 
 int Weapon::getType()

@@ -14,7 +14,7 @@ protected:
 	int owner = 2;
 public:
 	virtual void draw(wxAutoBufferedPaintDC &dc) = 0;
-	virtual void move() = 0;
+	virtual void move();
 	virtual bool isCollidingWith(GameObject* o) = 0;
 	int getGridX();
 	int getGridY();
