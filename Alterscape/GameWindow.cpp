@@ -3,6 +3,7 @@
 #include "CharOne.h"
 #include <stdlib.h>
 #include <time.h>
+#include <sstream>
 #define TIMER_ID 2000
 
 BEGIN_EVENT_TABLE(GameWindow, wxWindow)
@@ -10,8 +11,10 @@ BEGIN_EVENT_TABLE(GameWindow, wxWindow)
 	EVT_TIMER(TIMER_ID, GameWindow::onTimer)
 	EVT_TIMER(TIMER_ID + 1, GameWindow::delayShoot)
 	EVT_TIMER(TIMER_ID + 2, GameWindow::enemySpawn)
-	EVT_KEY_DOWN(GameWindow::moveChar)
-	EVT_KEY_UP(GameWindow::stopChar)
+	EVT_TIMER(TIMER_ID + 3, GameWindow::timeScore)
+	EVT_KEY_DOWN(GameWindow::onKeyDown)
+	EVT_KEY_UP(GameWindow::onKeyUp)
+	EVT_CHAR(GameWindow::onChar)
 	EVT_LEFT_DOWN(GameWindow::shootChar)
 	EVT_MOTION(GameWindow::updateMouse)
 END_EVENT_TABLE()
@@ -30,27 +33,41 @@ GameWindow::GameWindow(wxFrame * frame)
 	srand(time(NULL)); // generate random seed
 	spawner = new wxTimer(this, TIMER_ID + 2);
 	spawner->Start(rand() % 4000 + 1000); // generate random spawner delay (ms)
+	timescore = new wxTimer(this, TIMER_ID + 3);
+	timescore->Start(100);
 	player = new CharOne(this, wxGetDisplaySize().GetWidth()/2, wxGetDisplaySize().GetHeight()/2, 25);
 	player->setOwner(1);
 	updateGrid(player);
 	addObject(player);
+	imageLoad();
 }
 
 GameWindow::~GameWindow()
 {
 	timer->Stop();
 	spawner->Stop();
+	timescore->Stop();
 	delete timer;
 	delete spawner;
-	for (auto it : obj) if (it != nullptr) delete it;
+	delete timescore;
+	delete pausemenu;
+	for (auto it : weapon) delete it;
+	delete health;
+	delete killcount;
+	for (auto it : obj) if (it != nullptr) {
+		delete it;
+		it = nullptr;
+	}
+	wxMessageOutputDebug().Printf("over");
 }
 
 void GameWindow::onPaint(wxPaintEvent & evt)
 {
 	wxAutoBufferedPaintDC pdc(this);
-	pdc.SetBrush(wxBrush(wxColor(*wxBLACK)));
+	pdc.SetBrush(wxBrush(wxColour(0, 0, 0)));
 	pdc.DrawRectangle(wxPoint(0, 0), wxGetDisplaySize());
 	for (auto it : obj) if (it->getObjType() != 3) it->draw(pdc);
+	drawUI(pdc);
 }
 
 void GameWindow::onTimer(wxTimerEvent & evt)
@@ -64,7 +81,7 @@ void GameWindow::onTimer(wxTimerEvent & evt)
 		(*it)->move();
 		updateGrid(*it);
 		if ((*it)->getObjType() == 2 && ((*it)->getX() > wxGetDisplaySize().GetWidth() || (*it)->getX() < 0 || (*it)->getY() > wxGetDisplaySize().GetHeight() || (*it)->getY() < 0)) {
-			grid[(*it)->getGridY()][(*it)->getGridX()].erase(*it);
+			grid[(*it)->getGridY()][(*it)->getGridX()].remove(*it);
 			delete *it;
 			it = obj.erase(it);
 		}
@@ -72,60 +89,74 @@ void GameWindow::onTimer(wxTimerEvent & evt)
 	}
 	checkCollision();
 	Refresh(0);
-	//Update();
 }
 
-void GameWindow::moveChar(wxKeyEvent & evt)
+void GameWindow::onKeyDown(wxKeyEvent & evt)
 {
 	if (player != nullptr) {
 		int keycode = evt.GetKeyCode();
-		switch (keycode)
-		{
-		case 'W':
-			player->moveMY();
-			break;
-		case 'A':
-			player->moveMX();
-			break;
-		case 'S':
-			player->moveY();
-			break;
-		case 'D':
-			player->moveX();
-			break;
-		default:
-			break;
+		//wxMessageOutputDebug().Printf("%d", keycode);
+		if (!paused) {
+			switch (keycode)
+			{
+			case 'W':
+				player->moveMY();
+				break;
+			case 'A':
+				player->moveMX();
+				break;
+			case 'S':
+				player->moveY();
+				break;
+			case 'D':
+				player->moveX();
+				break;
+			case 27:
+				evt.Skip();
+				break;
+			default:
+				break;
+			}
+		}
+		else if (keycode == 27) evt.Skip();
+	}
+}
+
+void GameWindow::onKeyUp(wxKeyEvent & evt)
+{
+	if (player != nullptr) {
+		int keycode = evt.GetKeyCode();
+		if (!paused) {
+			switch (keycode)
+			{
+			case 'W':
+				player->stopY();
+				break;
+			case 'A':
+				player->stopX();
+				break;
+			case 'S':
+				player->stopY();
+				break;
+			case 'D':
+				player->stopX();
+				break;
+			default:
+				break;
+			}
 		}
 	}
 }
 
-void GameWindow::stopChar(wxKeyEvent & evt)
+void GameWindow::onChar(wxKeyEvent & evt)
 {
-	if (player != nullptr) {
-		int keycode = evt.GetKeyCode();
-		switch (keycode)
-		{
-		case 'W':
-			player->stopY();
-			break;
-		case 'A':
-			player->stopX();
-			break;
-		case 'S':
-			player->stopY();
-			break;
-		case 'D':
-			player->stopX();
-			break;
-		default:
-			break;
-		}
-	}
+	int key = evt.GetKeyCode();
+	if (key == 27) pauseGame();
 }
 
 void GameWindow::shootChar(wxMouseEvent & evt)
 {
-	if (shooter == nullptr && player != nullptr) {
+	if (shooter == nullptr && player != nullptr && !paused) {
 		wxPoint mousePos = evt.GetPosition();
 		player->shoot(mousePos.x, mousePos.y);
 		shooter = new wxTimer(this, TIMER_ID + 1);
@@ -160,36 +191,103 @@ void GameWindow::enemySpawn(wxTimerEvent &evt)
 	spawner->Start(randTime); // re-generate random spawner delay(ms)
 }
 
-void GameWindow::checkCollision() // all object collision (collision handler baru di bullet)
+void GameWindow::checkCollision() 
 {
 	for (auto it1 = obj.begin(); it1 != obj.end();) {
-		int gx = (*it1)->getGridX();
-		int gy = (*it1)->getGridY();
-		for (int y = -1; y < 2; y++) {
-			for (int x = -1; x < 2; x++) {
-				if (gy + y >= 0 && gy + y < 18 && gx + x >= 0 && gx + x < 31) {
-					for (auto it2 = grid[gy + y][gx + x].begin(); it2 != grid[gy + y][gx + x].end();) {
-						if (*it1 != *it2 && (*it1)->isCollidingWith(*it2)) {
+		bool hit = 0;
+		if ((*it1)->getObjType() == 2) { // bullet collision
+			int gx = (*it1)->getGridX();
+			int gy = (*it1)->getGridY();
+			for (int y = -1; y < 2; y++) {
+				for (int x = -1; x < 2; x++) {
+					if (gy + y >= 0 && gy + y < 18 && gx + x >= 0 && gx + x < 31) {
+						for (auto it2 = grid[gy + y][gx + x].begin(); it2 != grid[gy + y][gx + x].end();) {
 							if ((*it2)->getObjType() == 1) {
-								if (*it2 == player) player = nullptr;
-								if (((CharOne*)(*it2))->getShieldPtr() != nullptr) ((CharOne*)(*it2))->deleteShield();
-								obj.erase(*it2);
-								delete *it2;
-								it2 = grid[gy + y][gx + x].erase(it2);
-								wxMessageOutputDebug().Printf("aaa");
+								if ((*it1)->isCollidingWith(*it2)) {
+									if (((CharOne*)(*it2))->getShieldPtr() != nullptr) {
+										if ((*it1)->isCollidingWith(((CharOne*)(*it2))->getShieldPtr())) {
+											(((CharOne*)(*it2))->getShieldPtr())->deflect((Bullet*)(*it1));
+											wxMessageOutputDebug().Printf("t1");
+											++it2;
+										}
+										else {
+											hit = 1;
+											if (*it2 == player) {
+												if (hp > 1) {
+													--hp;
+													++it2;
+												}
+												else {
+													player = nullptr;
+													obj.remove(*it2);
+													delete *it2;
+													*it2 = nullptr;
+													it2 = grid[gy + y][gx + x].erase(it2);
+												}
+											}
+											else {
+												obj.remove(*it2);
+												delete *it2;
+												*it2 = nullptr;
+												it2 = grid[gy + y][gx + x].erase(it2);
+												score += 50;
+												kill++;
+												wxMessageOutputDebug().Printf("a1");
+											}
+											grid[gy + y][gx + x].remove(*it1);
+											delete *it1;
+											it1 = obj.erase(it1);
+											break;
+										}
+									}
+									else {
+										hit = 1;
+										if (*it2 == player) {
+											if (hp > 1) {
+												--hp;
+												++it2;
+											}
+											else {
+												player = nullptr;
+												obj.remove(*it2);
+												delete *it2;
+												*it2 = nullptr;
+												it2 = grid[gy + y][gx + x].erase(it2);
+											}
+										}
+										else {
+											obj.remove(*it2);
+											delete *it2;
+											*it2 = nullptr;
+											it2 = grid[gy + y][gx + x].erase(it2);
+											score += 50;
+											kill++;
+											wxMessageOutputDebug().Printf("a2");
+										}
+										grid[gy + y][gx + x].remove(*it1);
+										delete *it1;
+										it1 = obj.erase(it1);
+										break;
+									}
+								}
+								else ++it2;
 							}
 							else if ((*it2)->getObjType() == 3) {
-								//((Shield*)(*it2))->deflect((Bullet*)(*it1));
+								if ((*it1)->isCollidingWith(*it2)) {
+									((Shield*)(*it2))->deflect((Bullet*)(*it1));
+									wxMessageOutputDebug().Printf("t2");
+								}
 								++it2;
 							}
 							else ++it2;
 						}
-						else ++it2;
 					}
+					if (hit) x = 2;
 				}
+				if (hit) y = 2;
 			}
 		}
-		++it1;
+		if (!hit) ++it1;
 	}
 }
 
@@ -200,33 +298,133 @@ void GameWindow::updateGrid(GameObject * object)
 	int tx = object->getGridX();
 	int ty = object->getGridY();
 	if (gx != tx || gy != ty) {
-		if (grid[ty][tx].find(object) != grid[ty][tx].end()) grid[ty][tx].erase(object);
+		grid[ty][tx].remove(object);
 		object->setGridX(gridSize);
 		object->setGridY(gridSize);
-		grid[gy][gx].insert(object);
+		grid[gy][gx].push_back(object);
 	}
 }
 
 void GameWindow::addObject(GameObject * object)
 {
-	obj.insert(object);
+	obj.push_back(object);
 }
 
 void GameWindow::deleteObject(GameObject * object)
 {
-	grid[object->getGridY()][object->getGridX()].erase(object);
+	grid[object->getGridY()][object->getGridX()].remove(object);
+	obj.remove(object);
 	delete object;
-	obj.erase(object);
+}
+
+void GameWindow::timeScore(wxTimerEvent & evt)
+{
+	score++;
+}
+
+void GameWindow::drawUI(wxAutoBufferedPaintDC &dc)
+{
+	if (isPlayerAlive()) {
+		float scale = wxGetDisplaySize().GetWidth() / 1080;
+		int curr = player->getWeaponType();
+		int next = player->getNextWeapon();
+		dc.DrawBitmap(wxBitmap(*weapon[curr - 1]), wxPoint(0, 0));
+		dc.DrawBitmap(wxBitmap(*weapon[next + 2]), wxPoint(0, 0));
+		dc.DrawBitmap(wxBitmap(*killcount), wxPoint(0, 0));
+
+		dc.SetFont(wxFont(30 * scale, wxFONTFAMILY_SWISS, wxFONTSTYLE_NORMAL, wxFONTWEIGHT_NORMAL));
+		dc.SetTextForeground(wxColour(255, 255, 255));
+		std::wstringstream pts;
+		pts << score << " pts" << std::ends;
+		dc.DrawText(pts.str().c_str(), wxPoint(230 * scale, 20 * scale));
+		std::wstringstream ko;
+		ko << kill << std::ends;
+		dc.DrawText(ko.str().c_str(), wxPoint(230 * scale, 138 * scale));
+
+		wxPoint tri[3];
+		int s = 20 * scale;
+		int x = 160 * scale;
+		int y = 220 * scale;
+		int dist = 50 * scale;
+		dc.SetBrush(wxBrush(wxColour(255, 0, 0)));
+		for (int i = 0; i < hp; i++) {
+			tri[0] = wxPoint(x + dist * i, y);
+			tri[1] = wxPoint(x + dist * i + s, y);
+			tri[2] = wxPoint(x + + dist * i + s / 2, y + s);
+			dc.DrawPolygon(3, tri);
+		}
+	}
+}
+
+void GameWindow::imageLoad()
+{
+	wxStandardPaths &stdPaths = wxStandardPaths::Get();
+	wxString execpath = stdPaths.GetExecutablePath();
+	wxString filepath = wxFileName(execpath).GetPath() + wxT("\\res\\PauseMenu.png");
+	pausemenu = new wxBitmap(wxImage(filepath).Scale(wxGetDisplaySize().GetWidth(), wxGetDisplaySize().GetHeight()));
+
+	filepath = wxFileName(execpath).GetPath() + wxT("\\res\\killUI.png");
+	killcount = new wxBitmap(wxImage(filepath).Scale(wxGetDisplaySize().GetWidth(), wxGetDisplaySize().GetHeight()));
+
+	filepath = wxFileName(execpath).GetPath() + wxT("\\res\\nowRifle.png");
+	weapon[0] = new wxBitmap(wxImage(filepath).Scale(wxGetDisplaySize().GetWidth(), wxGetDisplaySize().GetHeight()));
+
+	filepath = wxFileName(execpath).GetPath() + wxT("\\res\\nowShotgun.png");
+	weapon[1] = new wxBitmap(wxImage(filepath).Scale(wxGetDisplaySize().GetWidth(), wxGetDisplaySize().GetHeight()));
+
+	filepath = wxFileName(execpath).GetPath() + wxT("\\res\\nowShield.png");
+	weapon[2] = new wxBitmap(wxImage(filepath).Scale(wxGetDisplaySize().GetWidth(), wxGetDisplaySize().GetHeight()));
+
+	filepath = wxFileName(execpath).GetPath() + wxT("\\res\\nextRifle.png");
+	weapon[3] = new wxBitmap(wxImage(filepath).Scale(wxGetDisplaySize().GetWidth(), wxGetDisplaySize().GetHeight()));
+
+	filepath = wxFileName(execpath).GetPath() + wxT("\\res\\nextShotgun.png");
+	weapon[4] = new wxBitmap(wxImage(filepath).Scale(wxGetDisplaySize().GetWidth(), wxGetDisplaySize().GetHeight()));
+
+	filepath = wxFileName(execpath).GetPath() + wxT("\\res\\nextShield.png");
+	weapon[5] = new wxBitmap(wxImage(filepath).Scale(wxGetDisplaySize().GetWidth(), wxGetDisplaySize().GetHeight()));
+
+}
+
+void GameWindow::pauseGame()
+{
+	if (!paused) {
+		timer->Stop();
+		spawner->Stop();
+		timescore->Stop();
+		for (auto it : obj) {
+			it->pause();
+		}
+		wxClientDC dc(this);
+		dc.DrawBitmap(*pausemenu, wxPoint(0, 0));
+		paused = true;
+	}
+	else {
+		for (auto it : obj) {
+			it->pause();
+		}
+		timer->Start(1);
+		spawner->Start(2000);
+		timescore->Start(100);
+		paused = false;
+	}
+}
+
+bool GameWindow::isPaused()
+{
+	return paused;
 }
 
 int GameWindow::getPlayerX()
 {
-	return player->getX();
+	if (isPlayerAlive()) return player->getX();
+	else return -1;
 }
 
 int GameWindow::getPlayerY()
 {
-	return player->getY();
+	if (isPlayerAlive())  return player->getY();
+	else return -1;
 }
 
 int GameWindow::getGridSize()
@@ -253,6 +451,6 @@ int GameWindow::getMouseY()
 
 void GameWindow::updateMouse(wxMouseEvent & evt)
 {
-	mouseX = evt.GetPosition().x;
-	mouseY = evt.GetPosition().y;
+	mouseX = evt.GetX();
+	mouseY = evt.GetY();
 }

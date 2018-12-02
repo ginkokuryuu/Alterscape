@@ -2,18 +2,19 @@
 #include "GameObject.h"
 class GameWindow;
 class Bullet;
+class CharOne;
 class Shield :
 	public GameObject
 {
 private:
-	GameObject* parent;
+	CharOne* parent;
 	GameWindow* window;
-	int r = 25;
 public:
 	void draw(wxAutoBufferedPaintDC &dc);
 	bool isCollidingWith(GameObject* o);
-	Shield(GameObject* parent, GameWindow* window);
+	Shield(CharOne* parent, GameWindow* window);
 	void deflect(Bullet* bullet);
+	void pause();
 	Shield();
 	~Shield();
 };

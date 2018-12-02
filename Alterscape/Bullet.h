@@ -13,12 +13,15 @@ private:
 	double vx = 0;
 	double vy = 0;
 	int v = 15;
+	int duration;
 	wxTimer *range;
+	wxStopWatch stopwatch;
 	DECLARE_EVENT_TABLE()
 public:
 	void draw(wxAutoBufferedPaintDC &dc);
 	void move();
 	void shoot(int x, int y);
+	void pause();
 	bool isCollidingWith(GameObject* o);
 	void outRange(wxTimerEvent &evt);
 	double getVx();

@@ -17,10 +17,14 @@ private:
 	int ax = 0;
 	int ay = 0;
 	int a = 5;
-	int hp = 10;
+	int xDir = 0;
+	int yDir = 0;
+	int wduration;
+	int nextweapon;
 	wxTimer *botshooter;
 	wxTimer *botmover;
 	wxTimer *weaponchanger;
+	wxStopWatch stopwatch;
 	GameWindow* parent;
 	DECLARE_EVENT_TABLE()
 public:
@@ -32,7 +36,7 @@ public:
 	void botMove(wxTimerEvent &evt);
 	void changeWeapon(wxTimerEvent &evt);
 	void shoot(int x, int y);
-	int getHP();
+	void pause();
 	void move();
 	void moveX();
 	void moveY();
@@ -41,7 +45,9 @@ public:
 	void stopX();
 	void stopY();
 	int getWeaponType();
+	int getNextWeapon();
 	Shield* getShieldPtr();
+	void setShieldPtr(Shield* shield);
 	void setShield();
 	void deleteShield();
 	~CharOne();

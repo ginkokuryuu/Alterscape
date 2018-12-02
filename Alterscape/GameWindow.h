@@ -1,6 +1,7 @@
 #pragma once
 #include "wx\wx.h"
-#include <unordered_set>
+#include "wx\dcbuffer.h"
+#include <list>
 class CharOne;
 class GameObject;
 class GameFrame;
@@ -12,8 +13,9 @@ public:
 	GameWindow(wxFrame *frame);
 	void onPaint(wxPaintEvent &evt);
 	void onTimer(wxTimerEvent &evt);
-	void moveChar(wxKeyEvent &evt);
-	void stopChar(wxKeyEvent &evt);
+	void onKeyDown(wxKeyEvent &evt);
+	void onKeyUp(wxKeyEvent &evt);
+	void onChar(wxKeyEvent &evt);
 	void shootChar(wxMouseEvent &evt);
 	void delayShoot(wxTimerEvent &evt);
 	void enemySpawn(wxTimerEvent &evt);
@@ -21,6 +23,11 @@ public:
 	void updateGrid(GameObject* object);
 	void addObject(GameObject* object);
 	void deleteObject(GameObject* object);
+	void timeScore(wxTimerEvent &evt);
+	void drawUI(wxAutoBufferedPaintDC &dc);
+	void imageLoad();
+	void pauseGame();
+	bool isPaused();
 	int getPlayerX();
 	int getPlayerY();
 	int getGridSize();
@@ -29,16 +36,25 @@ public:
 	int getMouseY();
 	void updateMouse(wxMouseEvent &evt);
 private:
+	bool paused = false;
+	int hp = 5;
+	int score = 0;
+	int kill = 0;
 	GameFrame *parentWindow;
 	int mouseX;
 	int mouseY;
 	CharOne *player;
-	std::unordered_set<GameObject*> obj;
-	std::unordered_set<GameObject*> grid[18][31]; // 18 x 31 @64px gridtiles (1920x1080)
+	std::list<GameObject*> obj;
+	std::list<GameObject*> grid[18][31]; // 18 x 31 @64px gridtiles (1920x1080)
 	int gridSize = 64;
 	wxTimer *timer;
 	wxTimer *shooter;
 	wxTimer *spawner;
+	wxTimer *timescore;
+	wxBitmap *pausemenu;
+	wxBitmap *health;
+	wxBitmap *killcount;
+	wxBitmap* weapon[6];
 	DECLARE_EVENT_TABLE()
 };
 

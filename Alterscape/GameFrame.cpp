@@ -43,7 +43,7 @@ void GameFrame::OnAbout(wxCommandEvent& WXUNUSED(event))
 void GameFrame::LoadGame()
 {
 	menuwindow->Show(false);
-	if (gamewindow != nullptr) gamewindow->Destroy();
+	if (gamewindow != nullptr) delete gamewindow;
 	gamewindow = new GameWindow(this);
 	gamewindow->Show(true);
 	gamewindow->SetInitialSize(wxGetDisplaySize());
@@ -55,5 +55,5 @@ void GameFrame::GameOver()
 	menuwindow->SetFocus();
 	gamewindow->Show(false);
 	menuwindow->Show(true);
-	wxMessageOutputDebug().Printf("jancuk");
+	//wxMessageOutputDebug().Printf("over");
 }

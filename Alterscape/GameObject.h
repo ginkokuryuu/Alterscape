@@ -28,6 +28,7 @@ public:
 	int getObjType();
 	int getOwner();
 	void setOwner(int owner);
+	virtual void pause() = 0;
 	GameObject();
 	~GameObject();
 };

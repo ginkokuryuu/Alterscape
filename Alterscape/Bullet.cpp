@@ -37,6 +37,19 @@ void Bullet::shoot(int x, int y)
 	vy = sin * v;
 }
 
+void Bullet::pause()
+{
+	if (!window->isPaused()) {
+		range->Stop();
+		stopwatch.Pause();
+	}
+	else {
+		duration = abs(duration - stopwatch.Time());
+		range->Start(duration);
+		stopwatch.Start(0);
+	}
+}
+
 bool Bullet::isCollidingWith(GameObject * o)
 {
 	int dx = o->getX() - x;
@@ -87,23 +100,26 @@ Bullet::Bullet(Weapon* parent, int x, int y, GameWindow* window)
 		r = 10;
 		range = new wxTimer(this, -1);
 		range->StartOnce(1200);
+		duration = 1200;
 		break;
 	case 2:
 		r = 5;
 		range = new wxTimer(this, -1);
 		range->StartOnce(600);
+		duration = 600;
 		break;
 	default:
 		break;
 	}
+	stopwatch.Start(0);
 }
 
 Bullet::Bullet()
 {
 }
 
-
 Bullet::~Bullet()
 {
+	range->Stop();
 	delete range;
 }

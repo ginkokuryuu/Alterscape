@@ -31,8 +31,12 @@ CharOne::CharOne(GameWindow* parent, int x, int y, int r)
 	botmover = new wxTimer(this, TIMER_ID + 1);
 	botmover->Start(100);
 	weaponchanger = new wxTimer(this, TIMER_ID + 2);
-	weaponchanger->Start(rand() % 3000 + 7000);
 	weapon = new Weapon(parent, this);
+	nextweapon = rand() % 3 + 1;
+	while (nextweapon == weapon->getType()) nextweapon = rand() % 3 + 1;
+	wduration = rand() % 3000 + 7000;
+	weaponchanger->Start(wduration);
+	stopwatch.Start(0);
 }
 
 bool CharOne::isCollidingWith(GameObject * o)
@@ -43,7 +47,7 @@ bool CharOne::isCollidingWith(GameObject * o)
 void CharOne::draw(wxAutoBufferedPaintDC & dc)
 {
 	if (shield != nullptr) shield->draw(dc);
-	if (owner == 1) dc.SetBrush(wxBrush(wxColor(*wxWHITE)));
+	if (owner == 1) dc.SetBrush(wxBrush(wxColour(255, 255, 255)));
 	else dc.SetBrush(wxBrush(wxColor(*wxRED)));
 	//dc.SetPen(wxPen(wxColor(*wxRED), 1, wxPENSTYLE_SOLID)); //ball outline
 	dc.DrawCircle(wxPoint(x, y), r);
@@ -57,11 +61,7 @@ void CharOne::botShoot(wxTimerEvent & evt)
 			botshooter->Start(rand() % 1000 + 500);
 		}
 	}
-	else {
-		botshooter->Stop();
-		//shoot(parent->getMouseX(), parent->getMouseY());
-	}
-	
+	else botshooter->Stop();
 }
 
 void CharOne::botMove(wxTimerEvent & evt)
@@ -110,10 +110,14 @@ void CharOne::botMove(wxTimerEvent & evt)
 
 void CharOne::changeWeapon(wxTimerEvent & evt)
 {
-	int neww = rand() % 2 + 2;
-	while (neww == weapon->getType()) neww = rand() % 2 + 2;
+	deleteShield();
+	int neww = nextweapon;
+	if (neww == 3) setShield();
 	weapon->setType(neww);
-	weaponchanger->Start(rand() % 3000 + 7000);
+	nextweapon = rand() % 3 + 1;
+	while (nextweapon == neww) nextweapon = rand() % 3 + 1;
+	wduration = rand() % 3000 + 7000;
+	weaponchanger->Start(wduration);
 }
 
 void CharOne::shoot(int x, int y)
@@ -121,9 +125,20 @@ void CharOne::shoot(int x, int y)
 	weapon->shoot(x, y);
 }
 
-int CharOne::getHP()
+void CharOne::pause()
 {
-	return hp;
+	if (!parent->isPaused()) {
+		botshooter->Stop();
+		botmover->Stop();
+		weaponchanger->Stop();
+	}
+	else {
+		botshooter->Start(rand() % 1000 + 500);
+		botmover->Start(rand() % 1000);
+		wduration = abs(wduration - stopwatch.Time());
+		weaponchanger->Start(wduration);
+		stopwatch.Start(0);
+	}
 }
 
 void CharOne::move()
@@ -134,26 +149,6 @@ void CharOne::move()
 		//wxMessageOutputDebug().Printf("%d %d", x, y);
 		x += vx;
 		y += vy;
-		/*if (ax > 0) {
-			if (vx <= 10) vx += ax;
-		}
-		else if (ax < 0) {
-			if (vx >= -10) vx += ax;
-		}
-		else {
-			if (vx > 0) vx -= a;
-			else if (vx < 0) vx += a;
-		}
-		if (ay > 0) {
-			if (vy <= 10) vy += ay;
-		}
-		else if (ay < 0) {
-			if (vy >= -10) vy += ay;
-		}
-		else {
-			if (vy > 0) vy -= a;
-			else if (vy < 0) vy += a;
-		}*/
 	}
 	else if (tx < r || tx > wxGetDisplaySize().GetWidth() - r) {
 		vx = ax = 0;
@@ -198,14 +193,27 @@ int CharOne::getWeaponType()
 	return weapon->getType();
 }
 
+int CharOne::getNextWeapon()
+{
+	return nextweapon;
+}
+
 Shield * CharOne::getShieldPtr()
 {
 	return shield;
 }
 
+void CharOne::setShieldPtr(Shield * shield)
+{
+	this->shield = shield;
+}
+
 void CharOne::setShield()
 {
 	shield = new Shield(this, parent);
+	shield->setOwner(owner);
+	parent->addObject(shield);
+	parent->updateGrid(shield);
 }
 
 void CharOne::deleteShield()
@@ -218,9 +226,15 @@ void CharOne::deleteShield()
 
 CharOne::~CharOne()
 {
+	botshooter->Stop();
+	botmover->Stop();
+	weaponchanger->Stop();
 	delete botshooter;
 	delete botmover;
 	delete weapon;
 	delete weaponchanger;
-	if (shield != nullptr) delete shield;
+	if (shield != nullptr) {
+		parent->deleteObject(shield);
+		shield = nullptr;
+	}
 }
