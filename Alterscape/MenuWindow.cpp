@@ -36,9 +36,8 @@ void MenuWindow::RenderFrame(wxPaintEvent & event)
 
 void MenuWindow::OnClick(wxMouseEvent & event)
 {
-
 	wxPoint mousePos = event.GetPosition();
-	float scale = wxGetDisplaySize().GetWidth() / 1080;
+	float scale = wxGetDisplaySize().GetHeight() / 1080.0;
 	if (mousePos.x > 64 * scale && mousePos.x < 302 * scale) {
 		if (mousePos.y > 537 * scale && mousePos.y < 618 * scale) {
 			parentWindow->LoadGame();
@@ -56,9 +55,10 @@ void MenuWindow::OnClick(wxMouseEvent & event)
 
 void MenuWindow::LoadBackground()
 {
+	wxLogNull pls;
 	wxStandardPaths &stdPaths = wxStandardPaths::Get();
 	wxString path = stdPaths.GetExecutablePath();
-	path = wxFileName(path).GetPath() + wxT("\\res\\MainMenu.png");
+	path = wxFileName(path).GetPath() + wxT("\\res\\Main_Menu.png");
 	wxMessageOutputDebug().Printf("LOAD BACKGROUND");
 	wxImage image(path);
 	backGround = new wxBitmap(image.Scale(wxGetDisplaySize().GetWidth(), wxGetDisplaySize().GetHeight()));

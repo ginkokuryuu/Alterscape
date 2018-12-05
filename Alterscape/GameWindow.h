@@ -16,7 +16,7 @@ public:
 	void onKeyDown(wxKeyEvent &evt);
 	void onKeyUp(wxKeyEvent &evt);
 	void onChar(wxKeyEvent &evt);
-	void shootChar(wxMouseEvent &evt);
+	void onClick(wxMouseEvent &evt);
 	void delayShoot(wxTimerEvent &evt);
 	void enemySpawn(wxTimerEvent &evt);
 	void checkCollision();
@@ -52,9 +52,9 @@ private:
 	wxTimer *spawner;
 	wxTimer *timescore;
 	wxBitmap *pausemenu;
-	wxBitmap *health;
 	wxBitmap *killcount;
 	wxBitmap* weapon[6];
+	wxBitmap *background;
 	DECLARE_EVENT_TABLE()
 };
 
