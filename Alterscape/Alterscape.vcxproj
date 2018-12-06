@@ -22,7 +22,7 @@
     <VCProjectVersion>15.0</VCProjectVersion>
     <ProjectGuid>{b03b0227-07b0-4096-a190-04ec2e1d6206}</ProjectGuid>
     <RootNamespace>Alterscape</RootNamespace>
-    <WindowsTargetPlatformVersion>10.0.17134.0</WindowsTargetPlatformVersion>
+    <WindowsTargetPlatformVersion>10.0.16299.0</WindowsTargetPlatformVersion>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
@@ -124,6 +124,7 @@
     <ClCompile Include="Bullet.cpp" />
     <ClCompile Include="CharOne.cpp" />
     <ClCompile Include="GameObject.cpp" />
+    <ClCompile Include="GameOverWindow.cpp" />
     <ClCompile Include="GameWindow.cpp" />
     <ClCompile Include="Main.cpp" />
     <ClCompile Include="Alterscape.cpp" />
@@ -138,6 +139,7 @@
     <ClInclude Include="CharOne.h" />
     <ClInclude Include="GameFrame.h" />
     <ClInclude Include="GameObject.h" />
+    <ClInclude Include="GameOverWindow.h" />
     <ClInclude Include="GameWindow.h" />
     <ClInclude Include="MenuWindow.h" />
     <ClInclude Include="Shield.h" />

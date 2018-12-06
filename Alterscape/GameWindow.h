@@ -40,6 +40,8 @@ private:
 	int hp = 5;
 	int score = 0;
 	int kill = 0;
+	int highScore;
+	int highKill;
 	GameFrame *parentWindow;
 	int mouseX;
 	int mouseY;

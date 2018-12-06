@@ -2,6 +2,7 @@
 #include "GameFrame.h"
 #include "CharOne.h"
 #include <stdlib.h>
+#include <stdio.h>
 #include <time.h>
 #include <sstream>
 #define TIMER_ID 2000
@@ -41,6 +42,21 @@ GameWindow::GameWindow(wxFrame * frame)
 	updateGrid(player);
 	addObject(player);
 	imageLoad();
+
+	//ngambil higscore dan highkill
+	FILE *text;
+	int state = 1;
+	if ((text = fopen("highScore.txt", "r")) == NULL) {
+		state = 0;
+	}
+	if (state) {
+		fscanf(text, "%d %d", &highScore, &highKill);
+		fclose(text);
+	}
+	else {
+		highScore = 0;
+		highKill = 0;
+	}
 }
 
 GameWindow::~GameWindow()
@@ -59,7 +75,7 @@ GameWindow::~GameWindow()
 		delete it;
 		it = nullptr;
 	}
-	wxMessageOutputDebug().Printf("over");
+	wxMessageOutputDebug().Printf("overTOD");
 }
 
 void GameWindow::onPaint(wxPaintEvent & evt)
@@ -75,7 +91,17 @@ void GameWindow::onTimer(wxTimerEvent & evt)
 {
 	if (!isPlayerAlive()) {
 		timer->Stop();
-		parentWindow->GameOver();
+		spawner->Stop();
+		timescore->Stop();
+		if (score > highScore) {
+			FILE *text;
+			highKill = kill;
+			highScore = score;
+			text = fopen("highScore.txt", "w");
+			fprintf(text, "%d %d", highScore, highKill);
+			fclose(text);
+		}
+		parentWindow->GameOver(score, kill, highScore, highKill);
 		return;
 	}
 	for (auto it = obj.begin(); it != obj.end();) {
@@ -152,7 +178,10 @@ void GameWindow::onKeyUp(wxKeyEvent & evt)
 void GameWindow::onChar(wxKeyEvent & evt)
 {
 	int key = evt.GetKeyCode();
-	if (key == 27) pauseGame();
+	if (key == 27) {
+		wxMessageOutputDebug().Printf("jiancuk");
+		pauseGame();
+	}
 }
 
 void GameWindow::onClick(wxMouseEvent & evt)
@@ -174,7 +203,7 @@ void GameWindow::onClick(wxMouseEvent & evt)
 				deleteObject(player);
 				player = nullptr;
 				timer->Stop();
-				parentWindow->GameOver();
+				parentWindow->LoadMenu();
 			}
 		}
 	}
@@ -429,6 +458,7 @@ void GameWindow::pauseGame()
 		spawner->Start(2000);
 		timescore->Start(100);
 		paused = false;
+		return;
 	}
 }
 

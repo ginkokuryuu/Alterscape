@@ -17,6 +17,7 @@ GameFrame::GameFrame(const wxString & title)
 	menuBar->Append(helpMenu, "&Help");
 	SetMenuBar(menuBar);
 #endif
+	
 	menuwindow = new MenuWindow(this);
 	menuwindow->SetInitialSize(wxGetDisplaySize());
 }
@@ -42,6 +43,8 @@ void GameFrame::OnAbout(wxCommandEvent& WXUNUSED(event))
 
 void GameFrame::LoadGame()
 {
+	if(gameOverWindow != nullptr)
+		gameOverWindow->Show(false);
 	menuwindow->Show(false);
 	if (gamewindow != nullptr) delete gamewindow;
 	gamewindow = new GameWindow(this);
@@ -50,10 +53,25 @@ void GameFrame::LoadGame()
 	gamewindow->SetFocus();
 }
 
-void GameFrame::GameOver()
+void GameFrame::GameOver(int score, int kill, int highScore, int highKill)
+{
+	wxMessageOutputDebug().Printf("%d %d %d %d", score, kill, highScore, highKill);
+	menuwindow->Show(false);
+	if (gamewindow != nullptr)
+	gamewindow->Show(false);
+	if (gameOverWindow != nullptr) delete gameOverWindow;
+	gameOverWindow = new GameOverWindow(this, score, kill, highScore, highKill);
+	gameOverWindow->Show(true);
+	gameOverWindow->SetInitialSize(wxGetDisplaySize());
+	gameOverWindow->SetFocus();
+}
+
+void GameFrame::LoadMenu()
 {
 	menuwindow->SetFocus();
-	gamewindow->Show(false);
+	if (gameOverWindow != nullptr)
+		gameOverWindow->Show(false);
+	if (gamewindow != nullptr)
+		gamewindow->Show(false);
 	menuwindow->Show(true);
-	//wxMessageOutputDebug().Printf("over");
 }
