@@ -2,6 +2,7 @@
 #include "GameObject.h"
 #include "wx\wx.h"
 #include "wx\dcbuffer.h"
+#include "wx\graphics.h"
 class Weapon;
 class GameWindow;
 class Bullet

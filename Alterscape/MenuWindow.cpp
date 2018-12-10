@@ -16,12 +16,13 @@ MenuWindow::MenuWindow(wxFrame * frame)
 	pngHandler = new wxPNGHandler();
 	wxImage::AddHandler(pngHandler);
 	LoadBackground();
-
+	LoadAbout();
 }
 
 MenuWindow::~MenuWindow()
 {
 	delete backGround;
+	delete about;
 }
 
 void MenuWindow::RenderFrame(wxPaintEvent & event)
@@ -37,21 +38,33 @@ void MenuWindow::RenderFrame(wxPaintEvent & event)
 void MenuWindow::OnClick(wxMouseEvent & event)
 {
 	wxPoint mousePos = event.GetPosition();
-	float scale = wxGetDisplaySize().GetHeight() / 1080.0;
-	if (mousePos.x > 64 * scale && mousePos.x < 302 * scale) {
-		if (mousePos.y > 537 * scale && mousePos.y < 618 * scale) {
-			parentWindow->LoadGame();
-			wxMessageOutputDebug().Printf("Play");
-		}
-		else if (mousePos.y > 647 * scale && mousePos.y < 728 * scale) {
-			wxMessageOutputDebug().Printf("About");
-		}
-		else if (mousePos.y > 757 * scale && mousePos.y < 838 * scale) {
-			this->GetParent()->Close(true);
-			wxMessageOutputDebug().Printf("Exit");
+	wxMessageOutputDebug().Printf("%d %d", mousePos.x, mousePos.y);
+	float scaleY = wxGetDisplaySize().GetHeight() / 1080.0;
+	float scaleX = wxGetDisplaySize().GetWidth() / 1920.0;
+	if (!aboutState) {
+		if (mousePos.x > 64 * scaleX && mousePos.x < 302 * scaleX) {
+			if (mousePos.y > 537 * scaleY && mousePos.y < 618 * scaleY) {
+				parentWindow->LoadGame();
+				wxMessageOutputDebug().Printf("Play");
+			}
+			else if (mousePos.y > 647 * scaleY && mousePos.y < 728 * scaleY) {
+				wxClientDC dc(this);
+				dc.DrawBitmap(*about, wxPoint((wxGetDisplaySize().GetWidth() - 1569) / 2 * scaleX, (wxGetDisplaySize().GetHeight() - 883) / 2 * scaleY));
+				aboutState = true;
+				wxMessageOutputDebug().Printf("About");
+			}
+			else if (mousePos.y > 757 * scaleY && mousePos.y < 838 * scaleY) {
+				this->GetParent()->Close(true);
+				wxMessageOutputDebug().Printf("Exit");
+			}
 		}
 	}
+	else if (mousePos.x < 173 * scaleX || mousePos.x > 1743 * scaleX || mousePos.y<98*scaleY || mousePos.y>982*scaleY || (mousePos.x >= 1600 * scaleX && mousePos.x <= 1661 * scaleX && mousePos.y >= 113 * scaleY && mousePos.y <= 171 * scaleY)) {
+		Refresh();
+		aboutState = false;
+	}
 }
+
 
 void MenuWindow::LoadBackground()
 {
@@ -62,4 +75,17 @@ void MenuWindow::LoadBackground()
 	wxMessageOutputDebug().Printf("LOAD BACKGROUND");
 	wxImage image(path);
 	backGround = new wxBitmap(image.Scale(wxGetDisplaySize().GetWidth(), wxGetDisplaySize().GetHeight()));
+}
+
+void MenuWindow::LoadAbout()
+{
+	float scaleY = wxGetDisplaySize().GetHeight() / 1080.0;
+	float scaleX = wxGetDisplaySize().GetWidth() / 1920.0;
+	wxLogNull pls;
+	wxStandardPaths &stdPaths = wxStandardPaths::Get();
+	wxString path = stdPaths.GetExecutablePath();
+	path = wxFileName(path).GetPath() + wxT("\\res\\About.png");
+	wxMessageOutputDebug().Printf("LOAD ABOUT");
+	wxImage image(path);
+	about = new wxBitmap(image.Scale(1569*scaleX, 883*scaleY));
 }

@@ -10,10 +10,16 @@ END_EVENT_TABLE()
 
 void Bullet::draw(wxAutoBufferedPaintDC &dc)
 {
-	if (owner == 1) dc.SetBrush(wxBrush(wxColor(*wxWHITE)));
-	else dc.SetBrush(wxBrush(wxColor(*wxRED)));
-	//dc.SetPen(wxPen(wxColor(*wxRED), 1, wxPENSTYLE_SOLID)); //ball outline
-	dc.DrawCircle(wxPoint(x, y), r);
+	wxGraphicsContext *gc = wxGraphicsContext::Create(dc);
+	gc->SetPen(*wxBLACK_PEN);
+	gc->Translate(x, y);
+	if (owner == 1) gc->SetBrush(wxBrush(wxColour(165, 149, 255)));
+	else gc->SetBrush(wxBrush(wxColor(*wxRED)));
+	wxGraphicsPath path = gc->CreatePath();
+	path.AddCircle(0, 0, r);
+	gc->StrokePath(path);
+	gc->FillPath(path);
+	delete gc;
 }
 
 void Bullet::move()

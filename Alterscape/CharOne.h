@@ -1,6 +1,7 @@
 #pragma once
 #include "wx\wx.h"
 #include "wx\dcbuffer.h"
+#include "wx\graphics.h"
 #include "GameObject.h"
 #include "Bullet.h"
 #include "Shield.h"
@@ -12,8 +13,6 @@ class CharOne
 private:
 	Shield* shield = nullptr;
 	Weapon* weapon;
-	int vx = 0;
-	int vy = 0;
 	int ax = 0;
 	int ay = 0;
 	int a = 5;
@@ -42,10 +41,10 @@ public:
 	void moveY();
 	void moveMX();
 	void moveMY();
-	void stopX();
-	void stopY();
 	int getWeaponType();
 	int getNextWeapon();
+	int getWeaponDuration();
+	int getStopwatchTime();
 	Shield* getShieldPtr();
 	void setShieldPtr(Shield* shield);
 	void setShield();

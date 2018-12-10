@@ -45,7 +45,7 @@ GameWindow::GameWindow(wxFrame * frame)
 
 	//ngambil higscore dan highkill
 	FILE *text;
-	int state = 1;
+	bool state = 1;
 	if ((text = fopen("highScore.txt", "r")) == NULL) {
 		state = 0;
 	}
@@ -75,7 +75,7 @@ GameWindow::~GameWindow()
 		delete it;
 		it = nullptr;
 	}
-	wxMessageOutputDebug().Printf("overTOD");
+	wxMessageOutputDebug().Printf("over");
 }
 
 void GameWindow::onPaint(wxPaintEvent & evt)
@@ -123,6 +123,7 @@ void GameWindow::onKeyDown(wxKeyEvent & evt)
 	if (player != nullptr) {
 		int keycode = evt.GetKeyCode();
 		//wxMessageOutputDebug().Printf("%d", keycode);
+		if (keycode == 27) evt.Skip();
 		if (!paused) {
 			switch (keycode)
 			{
@@ -138,14 +139,10 @@ void GameWindow::onKeyDown(wxKeyEvent & evt)
 			case 'D':
 				player->moveX();
 				break;
-			case 27:
-				evt.Skip();
-				break;
 			default:
 				break;
 			}
 		}
-		else if (keycode == 27) evt.Skip();
 	}
 }
 
@@ -157,16 +154,16 @@ void GameWindow::onKeyUp(wxKeyEvent & evt)
 			switch (keycode)
 			{
 			case 'W':
-				player->stopY();
+				player->moveY();
 				break;
 			case 'A':
-				player->stopX();
+				player->moveX();
 				break;
 			case 'S':
-				player->stopY();
+				player->moveMY();
 				break;
 			case 'D':
-				player->stopX();
+				player->moveMX();
 				break;
 			default:
 				break;
@@ -196,10 +193,11 @@ void GameWindow::onClick(wxMouseEvent & evt)
 		}
 	}
 	else {
-		float scale = wxGetDisplaySize().GetHeight() / 1080.0;
-		if (mousePos.x >= 832*scale && mousePos.x <= 1090*scale) {
-			if (mousePos.y >= 540*scale && mousePos.y <= 627*scale) pauseGame();
-			else if (mousePos.y >= 674*scale && mousePos.y <= 755*scale) {
+		float scaleY = wxGetDisplaySize().GetHeight() / 1080.0;
+		float scaleX = wxGetDisplaySize().GetWidth() / 1920.0;
+		if (mousePos.x >= 832*scaleX && mousePos.x <= 1090*scaleX) {
+			if (mousePos.y >= 540*scaleY && mousePos.y <= 627*scaleY) pauseGame();
+			else if (mousePos.y >= 674*scaleY && mousePos.y <= 755*scaleY) {
 				deleteObject(player);
 				player = nullptr;
 				timer->Stop();
@@ -217,6 +215,8 @@ void GameWindow::delayShoot(wxTimerEvent & evt)
 
 void GameWindow::enemySpawn(wxTimerEvent &evt)
 {
+	float scaleY = wxGetDisplaySize().GetHeight() / 1080.0;
+	float scaleX = wxGetDisplaySize().GetWidth() / 1920.0;
 	int randX = rand() % (wxGetDisplaySize().GetWidth()-50) + 25;
 	int randY = rand() % (wxGetDisplaySize().GetHeight()-50) + 25;
 	int randTime = rand() % 4000 + 1000;
@@ -225,8 +225,8 @@ void GameWindow::enemySpawn(wxTimerEvent &evt)
 	if (player != nullptr) {
 		while ((enemy->getGridX() >= player->getGridX() - 3 && enemy->getGridX() <= player->getGridX() + 3) &&
 			(enemy->getGridY() >= player->getGridY() - 3 && enemy->getGridY() <= player->getGridY() + 3)) {
-			randX = rand() % 950 + 50;
-			randY = rand() % 650 + 50;
+			randX = rand() % 950*scaleX + 50;
+			randY = rand() % 650*scaleY + 50;
 			enemy->setX(randX);
 			enemy->setY(randY);
 			updateGrid(enemy);
@@ -369,28 +369,35 @@ void GameWindow::timeScore(wxTimerEvent & evt)
 
 void GameWindow::drawUI(wxAutoBufferedPaintDC &dc)
 {
+	wxGraphicsContext *gc = wxGraphicsContext::Create(dc);
 	if (isPlayerAlive()) {
-		float scale = wxGetDisplaySize().GetHeight() / 1080.0;
+		float scaleY = wxGetDisplaySize().GetHeight() / 1080.0;
+		float scaleX = wxGetDisplaySize().GetWidth() / 1920.0;
 		int curr = player->getWeaponType();
 		int next = player->getNextWeapon();
-		dc.DrawBitmap(wxBitmap(*weapon[curr - 1]), wxPoint(45 * scale, 27 * scale));
-		dc.DrawBitmap(wxBitmap(*weapon[next + 2]), wxPoint(45 * scale, 220 * scale));
-		dc.DrawBitmap(wxBitmap(*killcount), wxPoint(320 * scale, 118 * scale));
+		int dur = player->getWeaponDuration();
+		int sw = player->getStopwatchTime();
+		double time = (dur - sw) / (double)dur;
+		dc.DrawBitmap(wxBitmap(*weapon[curr - 1]), wxPoint(45 * scaleX, 27 * scaleY));
+		gc->SetBrush(wxBrush(wxColour(255 * (1 - time), 255 * time, 0, 100)));
+		gc->DrawRoundedRectangle(45 * scaleX, 27 * scaleY, 146 * scaleX * (1-time), 146 * scaleY, 20);
+		dc.DrawBitmap(wxBitmap(*weapon[next + 2]), wxPoint(45 * scaleX, 220 * scaleY));
+		dc.DrawBitmap(wxBitmap(*killcount), wxPoint(320 * scaleX, 118 * scaleY));
 
-		dc.SetFont(wxFont(30 * scale, wxFONTFAMILY_SWISS, wxFONTSTYLE_NORMAL, wxFONTWEIGHT_NORMAL));
+		dc.SetFont(wxFont(30 * scaleY, wxFONTFAMILY_SWISS, wxFONTSTYLE_NORMAL, wxFONTWEIGHT_NORMAL));
 		dc.SetTextForeground(wxColour(255, 255, 255));
 		std::wstringstream pts;
 		pts << score << " pts" << std::ends;
-		dc.DrawText(pts.str().c_str(), wxPoint(230 * scale, 20 * scale));
+		dc.DrawText(pts.str().c_str(), wxPoint(230 * scaleX, 20 * scaleY));
 		std::wstringstream ko;
 		ko << kill << std::ends;
-		dc.DrawText(ko.str().c_str(), wxPoint(230 * scale, 130 * scale));
+		dc.DrawText(ko.str().c_str(), wxPoint(230 * scaleX, 130 * scaleY));
 
 		wxPoint tri[3];
-		int s = 20 * scale;
-		int x = 160 * scale;
-		int y = 220 * scale;
-		int dist = 50 * scale;
+		int s = 20 * scaleY;
+		int x = 160 * scaleX;
+		int y = 220 * scaleY;
+		int dist = 50 * scaleX;
 		dc.SetBrush(wxBrush(wxColour(255, 0, 0)));
 		for (int i = 0; i < hp; i++) {
 			tri[0] = wxPoint(x + dist * i, y);
@@ -399,38 +406,40 @@ void GameWindow::drawUI(wxAutoBufferedPaintDC &dc)
 			dc.DrawPolygon(3, tri);
 		}
 	}
+	delete gc;
 }
 
 void GameWindow::imageLoad()
 {
-	float scale = wxGetDisplaySize().GetHeight() / 1080.0;
-	wxMessageOutputDebug().Printf("x%f", scale);
+	float scaleY = wxGetDisplaySize().GetHeight() / 1080.0;
+	float scaleX = wxGetDisplaySize().GetWidth() / 1920.0;
+	wxMessageOutputDebug().Printf("x%f", scaleX);
 	wxLogNull pls;
 	wxStandardPaths &stdPaths = wxStandardPaths::Get();
 	wxString execpath = stdPaths.GetExecutablePath();
 	wxString filepath = wxFileName(execpath).GetPath() + wxT("\\res\\Pause_Menu.png");
-	pausemenu = new wxBitmap(wxImage(filepath).Scale(461 * scale, 620 * scale));
+	pausemenu = new wxBitmap(wxImage(filepath).Scale(461 * scaleX, 620 * scaleY));
 
 	filepath = wxFileName(execpath).GetPath() + wxT("\\res\\Kill_Counter.png");
-	killcount = new wxBitmap(wxImage(filepath).Scale(67 * scale, 53 * scale));
+	killcount = new wxBitmap(wxImage(filepath).Scale(67 * scaleX, 53 * scaleY));
 
 	filepath = wxFileName(execpath).GetPath() + wxT("\\res\\Now_Rifle.png");
-	weapon[0] = new wxBitmap(wxImage(filepath).Scale(146 * scale, 146 * scale));
+	weapon[0] = new wxBitmap(wxImage(filepath).Scale(146 * scaleX, 146 * scaleY));
 
 	filepath = wxFileName(execpath).GetPath() + wxT("\\res\\Now_Shotgun.png");
-	weapon[1] = new wxBitmap(wxImage(filepath).Scale(146 * scale, 146 * scale));
+	weapon[1] = new wxBitmap(wxImage(filepath).Scale(146 * scaleX, 146 * scaleY));
 
 	filepath = wxFileName(execpath).GetPath() + wxT("\\res\\Now_Shield.png");
-	weapon[2] = new wxBitmap(wxImage(filepath).Scale(146 * scale, 146 * scale));
+	weapon[2] = new wxBitmap(wxImage(filepath).Scale(146 * scaleX, 146 * scaleY));
 
 	filepath = wxFileName(execpath).GetPath() + wxT("\\res\\Next_Rifle.png");
-	weapon[3] = new wxBitmap(wxImage(filepath).Scale(78 * scale, 78 * scale));
+	weapon[3] = new wxBitmap(wxImage(filepath).Scale(78 * scaleX, 78 * scaleY));
 
 	filepath = wxFileName(execpath).GetPath() + wxT("\\res\\Next_Shotgun.png");
-	weapon[4] = new wxBitmap(wxImage(filepath).Scale(78 * scale, 78 * scale));
+	weapon[4] = new wxBitmap(wxImage(filepath).Scale(78 * scaleX, 78 * scaleY));
 
 	filepath = wxFileName(execpath).GetPath() + wxT("\\res\\Next_Shield.png");
-	weapon[5] = new wxBitmap(wxImage(filepath).Scale(78 * scale, 78 * scale));
+	weapon[5] = new wxBitmap(wxImage(filepath).Scale(78 * scaleX, 78 * scaleY));
 
 	filepath = wxFileName(execpath).GetPath() + wxT("\\res\\Background.png");
 	background = new wxBitmap(wxImage(filepath).Scale(wxGetDisplaySize().GetWidth(), wxGetDisplaySize().GetHeight()));
@@ -445,9 +454,10 @@ void GameWindow::pauseGame()
 		for (auto it : obj) {
 			it->pause();
 		}
-		float scale = wxGetDisplaySize().GetHeight() / 1080.0;
+		float scaleY = wxGetDisplaySize().GetHeight() / 1080.0;
+		float scaleX = wxGetDisplaySize().GetWidth() / 1920.0;
 		wxClientDC dc(this);
-		dc.DrawBitmap(*pausemenu, wxPoint((wxGetDisplaySize().GetWidth() - 461)*scale / 2, (wxGetDisplaySize().GetHeight() - 620)* scale / 2));
+		dc.DrawBitmap(*pausemenu, wxPoint((wxGetDisplaySize().GetWidth() - 461)*scaleX / 2, (wxGetDisplaySize().GetHeight() - 620)* scaleY / 2));
 		paused = true;
 	}
 	else {

@@ -5,8 +5,8 @@ class GameObject
 	: public wxEvtHandler
 {
 protected:
-	int x;
-	int y;
+	double x;
+	double y;
 	int gridX = 0;
 	int gridY = 0;
 	int r = 0;

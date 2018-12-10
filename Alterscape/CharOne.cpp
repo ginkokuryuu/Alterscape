@@ -6,6 +6,7 @@
 #include <algorithm>
 #include <stdlib.h>
 #include <time.h>
+#include <cmath>
 #define TIMER_ID 2100
 
 BEGIN_EVENT_TABLE(CharOne, wxEvtHandler)
@@ -21,10 +22,12 @@ CharOne::CharOne()
 
 CharOne::CharOne(GameWindow* parent, int x, int y, int r)
 {
+	float scaleY = wxGetDisplaySize().GetHeight() / 1080.0;
+	float scaleX = wxGetDisplaySize().GetWidth() / 1920.0;
 	this->parent = parent;
 	this->x = x;
 	this->y = y;
-	this->r = r;
+	this->r = r * scaleY;
 	type = 1;
 	botshooter = new wxTimer(this, TIMER_ID);
 	botshooter->Start(rand() % 1000 + 100);
@@ -46,11 +49,40 @@ bool CharOne::isCollidingWith(GameObject * o)
 
 void CharOne::draw(wxAutoBufferedPaintDC & dc)
 {
+	wxGraphicsContext *gc = wxGraphicsContext::Create(dc);
+	gc->SetPen(*wxBLACK_PEN);
+	gc->Translate(x, y);
+	float scaleY = wxGetDisplaySize().GetHeight() / 1080.0;
+	float scaleX = wxGetDisplaySize().GetWidth() / 1920.0;
 	if (shield != nullptr) shield->draw(dc);
-	if (owner == 1) dc.SetBrush(wxBrush(wxColour(255, 255, 255)));
-	else dc.SetBrush(wxBrush(wxColor(*wxRED)));
-	//dc.SetPen(wxPen(wxColor(*wxRED), 1, wxPENSTYLE_SOLID)); //ball outline
-	dc.DrawCircle(wxPoint(x, y), r);
+	if (owner == 1) {
+		gc->SetBrush(wxBrush(wxColour(165, 149, 255)));
+		wxGraphicsPath path = gc->CreatePath();
+		path.AddCircle(0, 0, r*scaleY);
+		gc->StrokePath(path);
+		gc->FillPath(path);
+	}
+	else {
+		int X = parent->getPlayerX() - x;
+		int Y = parent->getPlayerY() - y;
+		double a, b, c;
+		a = X;
+		b = Y;
+		c = sqrt(a*a + b * b);
+		double sin = b / c;
+		double cos = a / c;
+		gc->SetBrush(*wxRED_BRUSH);
+		wxGraphicsPath path = gc->CreatePath();
+		path.MoveToPoint(r, 0);
+		path.AddLineToPoint(-r, r);
+		path.AddLineToPoint(-r, -r);
+		path.AddLineToPoint(r, 0);
+		path.CloseSubpath();
+		gc->Rotate(atan2(sin, cos));
+		gc->StrokePath(path);
+		gc->FillPath(path);
+	}
+	delete gc;
 }
 
 void CharOne::botShoot(wxTimerEvent & evt)
@@ -67,9 +99,7 @@ void CharOne::botShoot(wxTimerEvent & evt)
 void CharOne::botMove(wxTimerEvent & evt)
 {
 	if (owner != 1) {
-		stopX();
-		stopY();
-		int axis = rand() % 8;
+		int axis = rand() % 4;
 		switch (axis)
 		{
 		case 0:
@@ -84,26 +114,10 @@ void CharOne::botMove(wxTimerEvent & evt)
 		case 3:
 			moveMY();
 			break;
-		case 4:
-			moveX();
-			moveY();
-			break;
-		case 5:
-			moveY();
-			moveMX();
-			break;
-		case 6:
-			moveMX();
-			moveMY();
-			break;
-		case 7:
-			moveMY();
-			moveX();
-			break;
 		default:
 			break;
 		}
-		botmover->Start(rand() % 1000);
+		botmover->Start(rand() % 500);
 	}
 	else botmover->Stop();
 }
@@ -118,6 +132,7 @@ void CharOne::changeWeapon(wxTimerEvent & evt)
 	while (nextweapon == neww) nextweapon = rand() % 3 + 1;
 	wduration = rand() % 3000 + 7000;
 	weaponchanger->Start(wduration);
+	stopwatch.Start(0);
 }
 
 void CharOne::shoot(int x, int y)
@@ -143,49 +158,33 @@ void CharOne::pause()
 
 void CharOne::move()
 {
-	int tx = x + vx;
-	int ty = y + vy;
+	int tx = x + a * xDir;
+	int ty = y + a * yDir;
 	if (tx > r && tx < wxGetDisplaySize().GetWidth() - r && ty > r && ty < wxGetDisplaySize().GetHeight() - r) {
 		//wxMessageOutputDebug().Printf("%d %d", x, y);
-		x += vx;
-		y += vy;
-	}
-	else if (tx < r || tx > wxGetDisplaySize().GetWidth() - r) {
-		vx = ax = 0;
-	}
-	else if (ty < r || ty > wxGetDisplaySize().GetHeight() - r) {
-		vy = ay = 0;
+		x += a * xDir;
+		y += a * yDir;
 	}
 }
 
 void CharOne::moveX()
 {
-	vx = a;
+	if (xDir < 1) ++xDir;
 }
 
 void CharOne::moveY()
 {
-	vy = a;
+	if (yDir < 1) ++yDir;
 }
 
 void CharOne::moveMX()
 {
-	vx = -a;
+	if (xDir > -1) --xDir;
 }
 
 void CharOne::moveMY()
 {
-	vy = -a;
-}
-
-void CharOne::stopX()
-{
-	vx = 0;
-}
-
-void CharOne::stopY()
-{
-	vy = 0;
+	if (yDir > -1) --yDir;
 }
 
 int CharOne::getWeaponType()
@@ -196,6 +195,16 @@ int CharOne::getWeaponType()
 int CharOne::getNextWeapon()
 {
 	return nextweapon;
+}
+
+int CharOne::getWeaponDuration()
+{
+	return wduration;
+}
+
+int CharOne::getStopwatchTime()
+{
+	return stopwatch.Time();
 }
 
 Shield * CharOne::getShieldPtr()

@@ -5,6 +5,12 @@
 
 void Shield::draw(wxAutoBufferedPaintDC & dc)
 {
+	wxGraphicsContext *gc = wxGraphicsContext::Create(dc);
+	gc->SetPen(*wxBLACK_PEN);
+	gc->SetBrush(wxBrush(wxColour(0, 150, 255)));
+	gc->Translate(parent->getX(), parent->getY());
+	float scaleY = wxGetDisplaySize().GetHeight() / 1080.0;
+	float scaleX = wxGetDisplaySize().GetWidth() / 1920.0;
 	if (window->isPlayerAlive()) {
 		if (parent->getOwner() == 1) {
 			int X = window->getMouseX() - parent->getX();
@@ -15,10 +21,14 @@ void Shield::draw(wxAutoBufferedPaintDC & dc)
 			c = sqrt(a*a + b * b);
 			double sin = b / c;
 			double cos = a / c;
-			x = cos * (parent->getR() - 15) + parent->getX();
-			y = sin * (parent->getR() - 15) + parent->getY();
-			dc.SetBrush(wxBrush(wxColour(0, 150, 255)));
-			dc.DrawCircle(wxPoint(x, y), r);
+			x = cos * (parent->getR() - 15);
+			y = sin * (parent->getR() - 15);
+			wxGraphicsPath path = gc->CreatePath();
+			path.AddCircle(x, y, r*scaleY);
+			x += parent->getX();
+			y += parent->getY();
+			gc->StrokePath(path);
+			gc->FillPath(path);
 		}
 		else {
 			int X = window->getPlayerX() - parent->getX();
@@ -29,12 +39,17 @@ void Shield::draw(wxAutoBufferedPaintDC & dc)
 			c = sqrt(a*a + b * b);
 			double sin = b / c;
 			double cos = a / c;
-			x = cos * (parent->getR() - 15) + parent->getX();
-			y = sin * (parent->getR() - 15) + parent->getY();
-			dc.SetBrush(wxBrush(wxColour(0, 150, 255)));
-			dc.DrawCircle(wxPoint(x, y), r);
+			x = cos * (parent->getR() - 15);
+			y = sin * (parent->getR() - 15);
+			wxGraphicsPath path = gc->CreatePath();
+			path.AddCircle(x, y, r*scaleY);
+			x += parent->getX();
+			y += parent->getY();
+			gc->StrokePath(path);
+			gc->FillPath(path);
 		}
 	}
+	delete gc;
 }
 
 bool Shield::isCollidingWith(GameObject * o)

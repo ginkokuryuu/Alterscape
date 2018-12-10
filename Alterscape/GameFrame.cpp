@@ -58,7 +58,7 @@ void GameFrame::GameOver(int score, int kill, int highScore, int highKill)
 	wxMessageOutputDebug().Printf("%d %d %d %d", score, kill, highScore, highKill);
 	menuwindow->Show(false);
 	if (gamewindow != nullptr)
-	gamewindow->Show(false);
+		gamewindow->Show(false);
 	if (gameOverWindow != nullptr) delete gameOverWindow;
 	gameOverWindow = new GameOverWindow(this, score, kill, highScore, highKill);
 	gameOverWindow->Show(true);
