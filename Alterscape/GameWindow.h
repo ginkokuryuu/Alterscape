@@ -25,6 +25,8 @@ public:
 	void deleteObject(GameObject* object);
 	void timeScore(wxTimerEvent &evt);
 	void drawUI(wxAutoBufferedPaintDC &dc);
+	void medSpawn(wxTimerEvent &evt);
+	void bossSpawn(wxTimerEvent &evt);
 	void imageLoad();
 	void pauseGame();
 	bool isPaused();
@@ -42,6 +44,8 @@ private:
 	int kill = 0;
 	int highScore;
 	int highKill;
+	int hitEffect = 0;
+	int healEffect = 0;
 	GameFrame *parentWindow;
 	int mouseX;
 	int mouseY;
@@ -53,6 +57,8 @@ private:
 	wxTimer *shooter;
 	wxTimer *spawner;
 	wxTimer *timescore;
+	wxTimer *medspawner;
+	wxTimer *bossspawner;
 	wxBitmap *pausemenu;
 	wxBitmap *killcount;
 	wxBitmap* weapon[6];

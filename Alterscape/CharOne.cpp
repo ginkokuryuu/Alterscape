@@ -19,7 +19,6 @@ CharOne::CharOne()
 {
 }
 
-
 CharOne::CharOne(GameWindow* parent, int x, int y, int r)
 {
 	float scaleY = wxGetDisplaySize().GetHeight() / 1080.0;
@@ -44,6 +43,15 @@ CharOne::CharOne(GameWindow* parent, int x, int y, int r)
 
 bool CharOne::isCollidingWith(GameObject * o)
 {
+	if (o->getObjType() == 4) {
+		int dx = o->getX() - x;
+		int dy = o->getY() - y;
+		int or = o->getR();
+		if ((dx*dx) + (dy*dy) <= (or +r) * (or +r)) {
+			if (owner == o->getOwner()) return true;
+			else return false;
+		}
+	}
 	return false;
 }
 
@@ -55,12 +63,34 @@ void CharOne::draw(wxAutoBufferedPaintDC & dc)
 	float scaleY = wxGetDisplaySize().GetHeight() / 1080.0;
 	float scaleX = wxGetDisplaySize().GetWidth() / 1920.0;
 	if (shield != nullptr) shield->draw(dc);
+	else {
+	}
 	if (owner == 1) {
 		gc->SetBrush(wxBrush(wxColour(165, 149, 255)));
 		wxGraphicsPath path = gc->CreatePath();
 		path.AddCircle(0, 0, r*scaleY);
 		gc->StrokePath(path);
 		gc->FillPath(path);
+		if (shield == nullptr) {
+			int s = 10;
+			int X = parent->getMouseX() - x;
+			int Y = parent->getMouseY() - y;
+			double a, b, c;
+			a = X;
+			b = Y;
+			c = sqrt(a*a + b * b);
+			double sin = b / c;
+			double cos = a / c;
+			wxGraphicsPath path2 = gc->CreatePath();
+			path2.MoveToPoint(35 + s, 0);
+			path2.AddLineToPoint(35, s);
+			path2.AddLineToPoint(35, -s);
+			path2.AddLineToPoint(35 + s, 0);
+			gc->SetBrush(wxBrush(wxColour(165, 149, 255, 150)));
+			gc->Rotate(atan2(sin, cos));
+			gc->StrokePath(path2);
+			gc->FillPath(path2);
+		}
 	}
 	else {
 		int X = parent->getPlayerX() - x;
@@ -77,7 +107,6 @@ void CharOne::draw(wxAutoBufferedPaintDC & dc)
 		path.AddLineToPoint(-r, r);
 		path.AddLineToPoint(-r, -r);
 		path.AddLineToPoint(r, 0);
-		path.CloseSubpath();
 		gc->Rotate(atan2(sin, cos));
 		gc->StrokePath(path);
 		gc->FillPath(path);
@@ -90,7 +119,7 @@ void CharOne::botShoot(wxTimerEvent & evt)
 	if (owner != 1) {
 		if (parent->isPlayerAlive()) {
 			shoot(parent->getPlayerX(), parent->getPlayerY());
-			botshooter->Start(rand() % 1000 + 500);
+			botshooter->Start(rand() % 1000 + 600);
 		}
 	}
 	else botshooter->Stop();
@@ -103,21 +132,25 @@ void CharOne::botMove(wxTimerEvent & evt)
 		switch (axis)
 		{
 		case 0:
+			xDir = 0;
 			moveX();
 			break;
 		case 1:
+			yDir = 0;
 			moveY();
 			break;
 		case 2:
+			xDir = 0;
 			moveMX();
 			break;
 		case 3:
+			yDir = 0;
 			moveMY();
 			break;
 		default:
 			break;
 		}
-		botmover->Start(rand() % 500);
+		botmover->Start(rand() % 500 + 250);
 	}
 	else botmover->Stop();
 }

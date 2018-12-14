@@ -3,6 +3,7 @@
 #include "GameWindow.h"
 #include <cmath>
 #include <algorithm>
+#define PI 3.14159265
 
 BEGIN_EVENT_TABLE(Bullet, wxEvtHandler)
 	EVT_TIMER(-1, Bullet::outRange)
@@ -73,6 +74,27 @@ void Bullet::outRange(wxTimerEvent & evt)
 	window->deleteObject(this);
 }
 
+void Bullet::setBullet(int bulletType)
+{
+	if (bulletType == 1) {
+		this->bulletType = 1;
+		r = 10;
+		duration = 1200;
+	}
+	else if (bulletType == 2) {
+		this->bulletType = 2;
+		r = 5;
+		duration = 600;
+	}
+	else if (bulletType == 4) {
+		this->bulletType = 4;
+		r = 35;
+		v = 10;
+		duration = 1500;
+	}
+	range->StartOnce(duration);
+}
+
 double Bullet::getVx()
 {
 	return vx;
@@ -100,23 +122,29 @@ Bullet::Bullet(Weapon* parent, int x, int y, GameWindow* window)
 	this->y = y;
 	this->window = window;
 	type = 2;
+	range = new wxTimer(this, -1);
 	switch (parent->getType())
 	{
 	case 1:
+		bulletType = 1;
 		r = 10;
-		range = new wxTimer(this, -1);
-		range->StartOnce(1200);
 		duration = 1200;
 		break;
 	case 2:
+		bulletType = 2;
 		r = 5;
-		range = new wxTimer(this, -1);
-		range->StartOnce(600);
 		duration = 600;
+		break;
+	case 4:
+		bulletType = 4;
+		r = 35;
+		v = 10;
+		duration = 1500;
 		break;
 	default:
 		break;
 	}
+	range->StartOnce(duration);
 	stopwatch.Start(0);
 }
 
@@ -128,4 +156,18 @@ Bullet::~Bullet()
 {
 	range->Stop();
 	delete range;
+	if (bulletType == 4) {
+		for (int i = 0; i < 36; i++) {
+			Bullet* bullet = new Bullet(parent, x, y, window);
+			bullet->setOwner(owner);
+			bullet->shoot(760, 540);
+			double vx = std::cos(i * 10 * PI / 180.0)*bullet->getVx() - std::sin(i * 10 * PI / 180.0)*bullet->getVy();
+			double vy = std::sin(i * 10 * PI / 180.0)*bullet->getVx() + std::cos(i * 10 * PI / 180.0)*bullet->getVy();
+			bullet->setVx(vx);
+			bullet->setVy(vy);
+			bullet->setBullet(1);
+			window->addObject(bullet);
+			window->updateGrid(bullet);
+		}
+	}
 }

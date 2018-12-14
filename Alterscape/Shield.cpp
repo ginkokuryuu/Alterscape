@@ -3,6 +3,8 @@
 #include "Bullet.h"
 #include "CharOne.h"
 
+#define PI 3.14159265
+
 void Shield::draw(wxAutoBufferedPaintDC & dc)
 {
 	wxGraphicsContext *gc = wxGraphicsContext::Create(dc);
@@ -24,7 +26,10 @@ void Shield::draw(wxAutoBufferedPaintDC & dc)
 			x = cos * (parent->getR() - 15);
 			y = sin * (parent->getR() - 15);
 			wxGraphicsPath path = gc->CreatePath();
-			path.AddCircle(x, y, r*scaleY);
+			//path.AddCircle(x, y, r*scaleY);
+			path.MoveToPoint(0, 0);
+			path.AddArc(0, 0, 35, -PI/4.0, PI/4.0, 1);
+			gc->Rotate(atan2(sin, cos));
 			x += parent->getX();
 			y += parent->getY();
 			gc->StrokePath(path);
@@ -42,7 +47,10 @@ void Shield::draw(wxAutoBufferedPaintDC & dc)
 			x = cos * (parent->getR() - 15);
 			y = sin * (parent->getR() - 15);
 			wxGraphicsPath path = gc->CreatePath();
-			path.AddCircle(x, y, r*scaleY);
+			//path.AddCircle(x, y, r*scaleY);
+			path.MoveToPoint(0, 0);
+			path.AddArc(0, 0, 35, -PI / 4.0, PI / 4.0, 1);
+			gc->Rotate(atan2(sin, cos));
 			x += parent->getX();
 			y += parent->getY();
 			gc->StrokePath(path);

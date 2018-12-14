@@ -123,12 +123,14 @@
   <ItemGroup>
     <ClCompile Include="Bullet.cpp" />
     <ClCompile Include="CharOne.cpp" />
+    <ClCompile Include="CharTwo.cpp" />
     <ClCompile Include="GameObject.cpp" />
     <ClCompile Include="GameOverWindow.cpp" />
     <ClCompile Include="GameWindow.cpp" />
     <ClCompile Include="Main.cpp" />
     <ClCompile Include="Alterscape.cpp" />
     <ClCompile Include="GameFrame.cpp" />
+    <ClCompile Include="MedKit.cpp" />
     <ClCompile Include="MenuWindow.cpp" />
     <ClCompile Include="Shield.cpp" />
     <ClCompile Include="Weapon.cpp" />
@@ -137,10 +139,12 @@
     <ClInclude Include="Alterscape.h" />
     <ClInclude Include="Bullet.h" />
     <ClInclude Include="CharOne.h" />
+    <ClInclude Include="CharTwo.h" />
     <ClInclude Include="GameFrame.h" />
     <ClInclude Include="GameObject.h" />
     <ClInclude Include="GameOverWindow.h" />
     <ClInclude Include="GameWindow.h" />
+    <ClInclude Include="MedKit.h" />
     <ClInclude Include="MenuWindow.h" />
     <ClInclude Include="Shield.h" />
     <ClInclude Include="Weapon.h" />

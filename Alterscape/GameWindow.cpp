@@ -1,6 +1,8 @@
 #include "GameWindow.h"
 #include "GameFrame.h"
 #include "CharOne.h"
+#include "CharTwo.h"
+#include "MedKit.h"
 #include <stdlib.h>
 #include <stdio.h>
 #include <time.h>
@@ -13,6 +15,8 @@ BEGIN_EVENT_TABLE(GameWindow, wxWindow)
 	EVT_TIMER(TIMER_ID + 1, GameWindow::delayShoot)
 	EVT_TIMER(TIMER_ID + 2, GameWindow::enemySpawn)
 	EVT_TIMER(TIMER_ID + 3, GameWindow::timeScore)
+	EVT_TIMER(TIMER_ID + 4, GameWindow::medSpawn)
+	EVT_TIMER(TIMER_ID + 5, GameWindow::bossSpawn)
 	EVT_KEY_DOWN(GameWindow::onKeyDown)
 	EVT_KEY_UP(GameWindow::onKeyUp)
 	EVT_CHAR(GameWindow::onChar)
@@ -33,9 +37,13 @@ GameWindow::GameWindow(wxFrame * frame)
 	timer->Start(1); // 1ms refresh delay
 	srand(time(NULL)); // generate random seed
 	spawner = new wxTimer(this, TIMER_ID + 2);
-	spawner->Start(rand() % 4000 + 1000); // generate random spawner delay (ms)
+	spawner->Start(rand() % 4000 + 750); // generate random spawner delay (ms)
+	bossspawner = new wxTimer(this, TIMER_ID + 5);
+	bossspawner->Start(24000);
 	timescore = new wxTimer(this, TIMER_ID + 3);
 	timescore->Start(100);
+	medspawner = new wxTimer(this, TIMER_ID + 4);
+	medspawner->Start(20000);
 	player = new CharOne(this, wxGetDisplaySize().GetWidth()/2, wxGetDisplaySize().GetHeight()/2, 25);
 	player->setOwner(1);
 	if (player->getShieldPtr() != nullptr) (player->getShieldPtr())->setOwner(1);
@@ -68,6 +76,8 @@ GameWindow::~GameWindow()
 	delete spawner;
 	delete timescore;
 	delete pausemenu;
+	delete medspawner;
+	delete bossspawner;
 	for (auto it : weapon) delete it;
 	delete background;
 	delete killcount;
@@ -219,7 +229,7 @@ void GameWindow::enemySpawn(wxTimerEvent &evt)
 	float scaleX = wxGetDisplaySize().GetWidth() / 1920.0;
 	int randX = rand() % (wxGetDisplaySize().GetWidth()-50) + 25;
 	int randY = rand() % (wxGetDisplaySize().GetHeight()-50) + 25;
-	int randTime = rand() % 4000 + 1000;
+	int randTime = rand() % abs(10000 - score) + 4000;
 	CharOne* enemy = new CharOne(this, randX, randY, 25);
 	updateGrid(enemy);
 	if (player != nullptr) {
@@ -236,18 +246,18 @@ void GameWindow::enemySpawn(wxTimerEvent &evt)
 	spawner->Start(randTime); // re-generate random spawner delay(ms)
 }
 
-void GameWindow::checkCollision() 
+void GameWindow::checkCollision()
 {
 	for (auto it1 = obj.begin(); it1 != obj.end();) {
 		bool hit = 0;
-		if ((*it1)->getObjType() == 2) { // bullet collision
-			int gx = (*it1)->getGridX();
-			int gy = (*it1)->getGridY();
-			for (int y = -1; y < 2; y++) {
-				for (int x = -1; x < 2; x++) {
-					if (gy + y >= 0 && gy + y < 18 && gx + x >= 0 && gx + x < 31) {
-						for (auto it2 = grid[gy + y][gx + x].begin(); it2 != grid[gy + y][gx + x].end();) {
-							if ((*it2)->getObjType() == 1) {
+		int gx = (*it1)->getGridX();
+		int gy = (*it1)->getGridY();
+		for (int y = -1; y < 2; y++) {
+			for (int x = -1; x < 2; x++) {
+				if (gy + y >= 0 && gy + y < 18 && gx + x >= 0 && gx + x < 31) {
+					for (auto it2 = grid[gy + y][gx + x].begin(); it2 != grid[gy + y][gx + x].end();) {
+						if ((*it1)->getObjType() == 2) {	// bullet collision
+							if ((*it2)->getObjType() == 1) {	// bullet to player collision
 								if ((*it1)->isCollidingWith(*it2)) {
 									if (((CharOne*)(*it2))->getShieldPtr() != nullptr) {
 										if ((*it1)->isCollidingWith(((CharOne*)(*it2))->getShieldPtr())) {
@@ -260,6 +270,7 @@ void GameWindow::checkCollision()
 											if (*it2 == player) {
 												if (hp > 1) {
 													--hp;
+													hitEffect = 255;
 													++it2;
 												}
 												else {
@@ -275,7 +286,7 @@ void GameWindow::checkCollision()
 												delete *it2;
 												*it2 = nullptr;
 												it2 = grid[gy + y][gx + x].erase(it2);
-												score += 50;
+												score += 100;
 												kill++;
 												wxMessageOutputDebug().Printf("a1");
 											}
@@ -290,6 +301,7 @@ void GameWindow::checkCollision()
 										if (*it2 == player) {
 											if (hp > 1) {
 												--hp;
+												hitEffect = 255;
 												++it2;
 											}
 											else {
@@ -305,7 +317,7 @@ void GameWindow::checkCollision()
 											delete *it2;
 											*it2 = nullptr;
 											it2 = grid[gy + y][gx + x].erase(it2);
-											score += 50;
+											score += 100;
 											kill++;
 											wxMessageOutputDebug().Printf("a2");
 										}
@@ -317,24 +329,63 @@ void GameWindow::checkCollision()
 								}
 								else ++it2;
 							}
-							else if ((*it2)->getObjType() == 3) {
+							else if ((*it2)->getObjType() == 3) {	// bullet to shield collision
 								if ((*it1)->isCollidingWith(*it2)) {
 									((Shield*)(*it2))->deflect((Bullet*)(*it1));
 									wxMessageOutputDebug().Printf("t2");
 								}
 								++it2;
 							}
+							else if ((*it2)->getObjType() == 5) {	// bullet to boss collision
+								if ((*it1)->isCollidingWith(*it2)) {
+									hit = 1;
+									if (((CharTwo*)(*it2))->getHP() > 1) {
+										((CharTwo*)(*it2))->decHP();
+										++it2;
+									}
+									else {
+										obj.remove(*it2);
+										delete *it2;
+										*it2 = nullptr;
+										it2 = grid[gy + y][gx + x].erase(it2);
+										score += 1000;
+										kill++;
+										wxMessageOutputDebug().Printf("a3");
+									}
+									grid[gy + y][gx + x].remove(*it1);
+									delete *it1;
+									it1 = obj.erase(it1);
+									break;
+								}
+								else ++it2;
+							}
 							else ++it2;
 						}
+						else if ((*it1)->getObjType() == 1){	// player collision
+							if ((*it2)->getObjType() == 4) {	// player to medkit collision
+								if ((*it1)->isCollidingWith(*it2)) {
+									++hp;
+									healEffect = 255;
+									obj.remove(*it2);
+									delete *it2;
+									*it2 = nullptr;
+									it2 = grid[gy + y][gx + x].erase(it2);
+								}
+								else ++it2;
+							}
+							else ++it2;
+						}
+						else ++it2;
 					}
-					if (hit) x = 2;
 				}
-				if (hit) y = 2;
+				if (hit) x = 2;
 			}
+			if (hit) y = 2;
 		}
 		if (!hit) ++it1;
 	}
 }
+
 
 void GameWindow::updateGrid(GameObject * object)
 {
@@ -379,7 +430,7 @@ void GameWindow::drawUI(wxAutoBufferedPaintDC &dc)
 		int sw = player->getStopwatchTime();
 		double time = (dur - sw) / (double)dur;
 		dc.DrawBitmap(wxBitmap(*weapon[curr - 1]), wxPoint(45 * scaleX, 27 * scaleY));
-		gc->SetBrush(wxBrush(wxColour(255 * (1 - time), 255 * time, 0, 100)));
+		gc->SetBrush(wxBrush(wxColour(255 * (1 - time), 0, 255 * time, 100)));
 		gc->DrawRoundedRectangle(45 * scaleX, 27 * scaleY, 146 * scaleX * (1-time), 146 * scaleY, 20);
 		dc.DrawBitmap(wxBitmap(*weapon[next + 2]), wxPoint(45 * scaleX, 220 * scaleY));
 		dc.DrawBitmap(wxBitmap(*killcount), wxPoint(320 * scaleX, 118 * scaleY));
@@ -402,11 +453,50 @@ void GameWindow::drawUI(wxAutoBufferedPaintDC &dc)
 		for (int i = 0; i < hp; i++) {
 			tri[0] = wxPoint(x + dist * i, y);
 			tri[1] = wxPoint(x + dist * i + s, y);
-			tri[2] = wxPoint(x + + dist * i + s / 2, y + s);
+			tri[2] = wxPoint(x + dist * i + s / 2, y + s);
 			dc.DrawPolygon(3, tri);
+		}
+		if (hitEffect > 150) {
+			gc->SetBrush(wxBrush(wxColour(255, 0, 0, abs((hitEffect -= 10) - 150))));
+			gc->DrawRectangle(0, 0, wxGetDisplaySize().GetWidth(), wxGetDisplaySize().GetHeight());
+		}
+		if (healEffect > 150) {
+			gc->SetBrush(wxBrush(wxColour(0, 255, 0, abs((healEffect -= 10) - 150))));
+			gc->DrawRectangle(0, 0, wxGetDisplaySize().GetWidth(), wxGetDisplaySize().GetHeight());
 		}
 	}
 	delete gc;
+}
+
+void GameWindow::medSpawn(wxTimerEvent & evt)
+{
+	float scaleY = wxGetDisplaySize().GetHeight() / 1080.0;
+	float scaleX = wxGetDisplaySize().GetWidth() / 1920.0;
+	int randX = rand() % 950 * scaleX + 50;
+	int randY = rand() % 650 * scaleY + 50;
+	MedKit* med = new MedKit(randX, randY, this);
+	medspawner->Start(rand() % 10000 + 20000);
+}
+
+void GameWindow::bossSpawn(wxTimerEvent & evt)
+{
+	float scaleY = wxGetDisplaySize().GetHeight() / 1080.0;
+	float scaleX = wxGetDisplaySize().GetWidth() / 1920.0;
+	int randX = rand() % (wxGetDisplaySize().GetWidth() - 120) + 60;
+	int randY = rand() % (wxGetDisplaySize().GetHeight() - 120) + 60;
+	int randTime = rand() % abs(10000 - score) + 24000;
+	CharTwo* boss = new CharTwo(randX, randY, this);
+	if (player != nullptr) {
+		while ((boss->getGridX() >= player->getGridX() - 3 && boss->getGridX() <= player->getGridX() + 3) &&
+			(boss->getGridY() >= player->getGridY() - 3 && boss->getGridY() <= player->getGridY() + 3)) {
+			randX = rand() % 950 * scaleX + 50;
+			randY = rand() % 650 * scaleY + 50;
+			boss->setX(randX);
+			boss->setY(randY);
+			updateGrid(boss);
+		}
+	}
+	bossspawner->Start(randTime);
 }
 
 void GameWindow::imageLoad()
@@ -451,6 +541,8 @@ void GameWindow::pauseGame()
 		timer->Stop();
 		spawner->Stop();
 		timescore->Stop();
+		medspawner->Stop();
+		bossspawner->Stop();
 		for (auto it : obj) {
 			it->pause();
 		}
@@ -467,6 +559,8 @@ void GameWindow::pauseGame()
 		timer->Start(1);
 		spawner->Start(2000);
 		timescore->Start(100);
+		medspawner->Start(15000);
+		bossspawner->Start(17500);
 		paused = false;
 		return;
 	}

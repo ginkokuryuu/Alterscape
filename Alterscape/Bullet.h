@@ -15,6 +15,7 @@ private:
 	double vy = 0;
 	int v = 15;
 	int duration;
+	int bulletType;
 	wxTimer *range;
 	wxStopWatch stopwatch;
 	DECLARE_EVENT_TABLE()
@@ -25,6 +26,7 @@ public:
 	void pause();
 	bool isCollidingWith(GameObject* o);
 	void outRange(wxTimerEvent &evt);
+	void setBullet(int bulletType);
 	double getVx();
 	double getVy();
 	void setVx(double vx);

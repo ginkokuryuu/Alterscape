@@ -13,8 +13,6 @@ class CharOne
 private:
 	Shield* shield = nullptr;
 	Weapon* weapon;
-	int ax = 0;
-	int ay = 0;
 	int a = 5;
 	int xDir = 0;
 	int yDir = 0;

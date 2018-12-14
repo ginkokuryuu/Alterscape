@@ -48,6 +48,12 @@
     <ClCompile Include="GameOverWindow.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="MedKit.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="CharTwo.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Alterscape.h">
@@ -78,6 +84,12 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="GameOverWindow.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="MedKit.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="CharTwo.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

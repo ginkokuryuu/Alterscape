@@ -1,6 +1,7 @@
 #include "Weapon.h"
 #include "GameWindow.h"
 #include "CharOne.h"
+#include "CharTwo.h"
 #include <math.h>
 #define PI 3.14159265
 void Weapon::shoot(int x, int y)
@@ -25,14 +26,24 @@ void Weapon::shoot(int x, int y)
 			parent->updateGrid(bullet);
 		}
 	}
+	else if (type == 4) {
+		Bullet* bullet = new Bullet(this, owner->getX(), owner->getY(), parent);
+		bullet->setOwner(owner->getOwner());
+		bullet->shoot(x, y);
+		parent->addObject(bullet);
+		parent->updateGrid(bullet);
+	}
 }
 
-Weapon::Weapon(GameWindow * parent, CharOne * owner)
+Weapon::Weapon(GameWindow * parent, GameObject * owner)
 {
 	this->parent = parent;
 	this->owner = owner;
-	type = rand() % 3 + 1;
-	if (type == 3) owner->setShield();
+	if (owner->getObjType() == 1) {
+		type = rand() % 3 + 1;
+		if (type == 3) ((CharOne*)(owner))->setShield();
+	}
+	else if (owner->getObjType() == 5) type = 4;
 }
 
 int Weapon::getType()
